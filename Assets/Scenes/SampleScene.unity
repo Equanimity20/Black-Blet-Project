@@ -658,6 +658,11 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 371411335}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &425518306 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1970710895052594027, guid: 6c7391cf9134f7d4e9d52719a6715ba8, type: 3}
+  m_PrefabInstance: {fileID: 1728552298685091002}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &469338148 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2102969813513727048, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
@@ -1862,6 +1867,50 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1913846224250580270, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
+      propertyPath: cam
+      value: 
+      objectReference: {fileID: 310017091}
+    - target: {fileID: 1913846224250580270, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
+      propertyPath: dashCd
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1913846224250580270, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
+      propertyPath: dashFov
+      value: 95
+      objectReference: {fileID: 0}
+    - target: {fileID: 1913846224250580270, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
+      propertyPath: dashForce
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 1913846224250580270, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
+      propertyPath: playerCam
+      value: 
+      objectReference: {fileID: 425518306}
+    - target: {fileID: 1913846224250580270, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
+      propertyPath: orientation
+      value: 
+      objectReference: {fileID: 965168602}
+    - target: {fileID: 1913846224250580270, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
+      propertyPath: dashDuration
+      value: 0.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 1913846224250580270, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
+      propertyPath: maxDashYSpeed
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 1913846224250580270, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
+      propertyPath: disableGravity
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1913846224250580270, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
+      propertyPath: dashUpwardForce
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1913846224250580270, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
+      propertyPath: useCameraForward
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3828029709784111412, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
       propertyPath: m_Name
       value: Player
@@ -1870,9 +1919,21 @@ PrefabInstance:
       propertyPath: cam
       value: 
       objectReference: {fileID: 310017091}
+    - target: {fileID: 7050468062953168998, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
+      propertyPath: dashSpeed
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 7050468062953168998, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
+      propertyPath: maxYSpeed
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 7050468062953168998, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
+      propertyPath: dashSpeedChangeFactor
+      value: 50
+      objectReference: {fileID: 0}
     - target: {fileID: 7398775036365492541, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 8.16
       objectReference: {fileID: 0}
     - target: {fileID: 7398775036365492541, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1880,7 +1941,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7398775036365492541, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -6.23
       objectReference: {fileID: 0}
     - target: {fileID: 7398775036365492541, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1933,7 +1994,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5024975980811674518, guid: 6c7391cf9134f7d4e9d52719a6715ba8, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 8.13
       objectReference: {fileID: 0}
     - target: {fileID: 5024975980811674518, guid: 6c7391cf9134f7d4e9d52719a6715ba8, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1941,7 +2002,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5024975980811674518, guid: 6c7391cf9134f7d4e9d52719a6715ba8, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -6.21
       objectReference: {fileID: 0}
     - target: {fileID: 5024975980811674518, guid: 6c7391cf9134f7d4e9d52719a6715ba8, type: 3}
       propertyPath: m_LocalRotation.w

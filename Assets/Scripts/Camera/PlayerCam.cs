@@ -45,4 +45,9 @@ public class PlayerCam : MonoBehaviour
     {
         transform.DOLocalRotate(new Vector3(0, 0, zTilt), 0.25f);
     }
+
+    public void DoFov(float endValue, float duration)
+    {
+        GetComponent<Camera>().DOFieldOfView(endValue, 0.25f);
+    }
 }
