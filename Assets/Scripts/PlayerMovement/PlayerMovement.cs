@@ -32,6 +32,14 @@ public class PlayerMovementAdvanced : MonoBehaviour
     public float crouchYScale;
     private float startYScale;
 
+    [Header("Coyote Time")]
+    public float coyoteTime = 0.2f; // how lenient the jump is after falling
+    private float coyoteTimeCounter;
+
+    [Header("Jump Buffer")]
+    public float jumpBufferTime = 0.2f; // how long we remember a jump press
+    private float jumpBufferCounter;
+
     [Header("Keybinds")]
     public KeyCode jumpKey = KeyCode.Space;
     public KeyCode sprintKey = KeyCode.LeftShift;
@@ -101,6 +109,15 @@ public class PlayerMovementAdvanced : MonoBehaviour
             rb.drag = groundDrag;
         else
             rb.drag = 0;
+
+        if (grounded)
+        {
+            coyoteTimeCounter = coyoteTime;
+        }
+        else
+        {
+            coyoteTimeCounter -= Time.deltaTime;
+        }
     }
 
     private void FixedUpdate()
@@ -114,13 +131,21 @@ public class PlayerMovementAdvanced : MonoBehaviour
         verticalInput = Input.GetAxisRaw("Vertical");
 
         // when to jump
-        if(Input.GetKey(jumpKey) && readyToJump && grounded)
+        if (Input.GetKeyDown(jumpKey))
+        {
+            jumpBufferCounter = jumpBufferTime;
+        }
+        else
+        {
+            jumpBufferCounter -= Time.deltaTime;
+        }
+
+        if (jumpBufferCounter > 0 && coyoteTimeCounter > 0 && readyToJump)
         {
             readyToJump = false;
-
             Jump();
-
             Invoke(nameof(ResetJump), jumpCooldown);
+            jumpBufferCounter = 0f; // Clear buffer after successful jump
         }
 
         // start crouch

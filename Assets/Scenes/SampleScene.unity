@@ -1881,7 +1881,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1913846224250580270, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
       propertyPath: dashForce
-      value: 20
+      value: 80
       objectReference: {fileID: 0}
     - target: {fileID: 1913846224250580270, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
       propertyPath: playerCam
@@ -1919,9 +1919,13 @@ PrefabInstance:
       propertyPath: cam
       value: 
       objectReference: {fileID: 310017091}
+    - target: {fileID: 4286860521214453687, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
+      propertyPath: gravityCounterForce
+      value: 30
+      objectReference: {fileID: 0}
     - target: {fileID: 7050468062953168998, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
       propertyPath: dashSpeed
-      value: 20
+      value: 80
       objectReference: {fileID: 0}
     - target: {fileID: 7050468062953168998, guid: 8f2b7a2651e54db46add63df9bd3332c, type: 3}
       propertyPath: maxYSpeed
