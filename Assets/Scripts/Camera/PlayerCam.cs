@@ -36,18 +36,13 @@ public class PlayerCam : MonoBehaviour
         orientation.rotation = Quaternion.Euler(0, yRotation, 0);
     }
 
-    public void DoFov(float endValue)
+    public void DoFov(float endValue, float duration)
     {
-        GetComponent<Camera>().DOFieldOfView(endValue, 0.25f);
+        GetComponent<Camera>().DOFieldOfView(endValue, duration);
     }
 
     public void DoTilt(float zTilt)
     {
         transform.DOLocalRotate(new Vector3(0, 0, zTilt), 0.25f);
-    }
-
-    public void DoFov(float endValue, float duration)
-    {
-        GetComponent<Camera>().DOFieldOfView(endValue, 0.25f);
     }
 }

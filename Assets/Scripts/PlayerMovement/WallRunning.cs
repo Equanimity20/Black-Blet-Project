@@ -134,7 +134,7 @@ public class WallRunningAdvanced : MonoBehaviour
         rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
 
         // apply camera effects
-        cam.DoFov(90f);
+        cam.DoFov(90f, 0.25f);
         if (wallLeft) cam.DoTilt(-5f);
         if (wallRight) cam.DoTilt(5f);
     }
@@ -173,7 +173,7 @@ public class WallRunningAdvanced : MonoBehaviour
         pm.wallrunning = false;
 
         // reset camera effects
-        cam.DoFov(80f);
+        cam.DoFov(80f, 0.25f);
         cam.DoTilt(0f);
     }
 

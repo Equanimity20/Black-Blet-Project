@@ -72,7 +72,7 @@ public class Dashing : MonoBehaviour
         pm.dashing = true;
         pm.maxYSpeed = maxDashYSpeed;
 
-        cam.DoFov(dashFov);
+        cam.DoFov(dashFov, 0.25f);
 
         Vector3 inputDirection = GetInputDirectionFromCamera();
         if (inputDirection.magnitude < 0.1f)
@@ -80,9 +80,6 @@ public class Dashing : MonoBehaviour
 
         if (disableGravity)
             rb.useGravity = false;
-
-        //if (resetVel)
-        //    rb.velocity = Vector3.zero;
 
         Vector3 dashDirection = inputDirection.normalized;
         Vector3 forceToApply = dashDirection * dashForce;
@@ -111,7 +108,7 @@ public class Dashing : MonoBehaviour
         pm.dashing = false;
         pm.maxYSpeed = 0;
 
-        cam.DoFov(85f);
+        cam.DoFov(80f, 0.25f);
 
         if (disableGravity)
             rb.useGravity = true;
