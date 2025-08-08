@@ -1,36 +1,68 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class EquipLogic : MonoBehaviour
 {
-    public Transform cameraTransform; // Main camera
+    public enum WeaponSlot { Primary, Secondary, Melee, Utility }
+
+    [System.Serializable]
+    public class WeaponEntry
+    {
+        public WeaponSlot slot;
+        public GameObject prefab;
+    }
+
+    [Header("Weapon Slots")]
+    public List<WeaponEntry> weaponList = new List<WeaponEntry>();
+
+    public Transform cameraTransform;
     public Vector3 positionOffset = new Vector3(0.5f, -0.5f, 1.0f);
     public Vector3 rotationOffset = Vector3.zero;
-    public GameObject weaponPrefab; // Default weapon prefab
-    public GameObject currentWeapon;
 
-    // Call this to equip a weapon prefab
-    public void EquipWeapon(GameObject weaponPrefab)
+    private Dictionary<WeaponSlot, GameObject> weaponPrefabs;
+    private GameObject currentWeapon;
+    private WeaponSlot? currentSlot = null;
+
+    // Add this property to allow other scripts to check what's equipped:
+    public GameObject CurrentWeapon => currentWeapon;
+    public WeaponSlot? CurrentSlot => currentSlot;
+    public string CurrentWeaponName => currentWeapon != null ? currentWeapon.name : "None";
+
+    void Awake()
     {
-        // Remove current weapon if any
-        if (currentWeapon != null)
+        weaponPrefabs = new Dictionary<WeaponSlot, GameObject>();
+        foreach (var entry in weaponList)
         {
-            Destroy(currentWeapon);
+            if (entry.prefab != null && !weaponPrefabs.ContainsKey(entry.slot))
+                weaponPrefabs.Add(entry.slot, entry.prefab);
+        }
+    }
+
+    public void EquipWeapon(WeaponSlot slot, WeaponEntry prefab = null)
+    {
+        if (!weaponPrefabs.ContainsKey(slot))
+        {
+            return;
         }
 
-        // Spawn new weapon
-        currentWeapon = Instantiate(weaponPrefab, cameraTransform);
-        currentWeapon.name = currentWeapon.name.Replace("(Clone)", "").Trim();
+        if (currentSlot == slot) return; // Already equipped
+
+        UnequipWeapon();
+
+        var prefabClone = weaponPrefabs[slot];
+        currentSlot = slot;
+        currentWeapon = Instantiate(prefabClone, cameraTransform);
+        currentWeapon.name = prefabClone.name;
         currentWeapon.transform.localPosition = positionOffset;
         currentWeapon.transform.localEulerAngles = rotationOffset;
     }
 
-    // Call this to unequip current weapon
     public void UnequipWeapon()
     {
         if (currentWeapon != null)
-        {
             Destroy(currentWeapon);
-            currentWeapon = null;
-        }
+
+        currentWeapon = null;
+        currentSlot = null;
     }
 }

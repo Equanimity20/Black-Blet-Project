@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2034545178895995264
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5444332969298965753}
+  m_Layer: 0
+  m_Name: Hutling Raycast Point
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5444332969298965753
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2034545178895995264}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7398775036365492541}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3828029709784111412
 GameObject:
   m_ObjectHideFlags: 0
@@ -38,6 +69,7 @@ Transform:
   - {fileID: 7841832817992721963}
   - {fileID: 5277126920200578017}
   - {fileID: 2102969813513727048}
+  - {fileID: 5444332969298965753}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!54 &4424779482404691103
@@ -79,19 +111,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0c1f01db9b56304fa4ee1035b7a833b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  moveSpeed: 0
   walkSpeed: 7
   sprintSpeed: 10
+  dashSpeed: 0
+  dashSpeedChangeFactor: 0
   slideSpeed: 30
   wallrunSpeed: 8.5
   climbSpeed: 3
   speedIncreaseMultiplier: 1.5
   slopeIncreaseMultiplier: 2.5
+  maxYSpeed: 0
   groundDrag: 4
   jumpForce: 18
   jumpCooldown: 0.25
   airMultiplier: 0.4
   crouchSpeed: 3.5
   crouchYScale: 0.5
+  coyoteTime: 0.2
+  jumpBufferTime: 0.2
   jumpKey: 32
   sprintKey: 304
   crouchKey: 306
@@ -102,11 +140,13 @@ MonoBehaviour:
   grounded: 0
   maxSlopeAngle: 40
   orientation: {fileID: 5277126920200578017}
+  rb: {fileID: 0}
   state: 0
   sliding: 0
   crouching: 0
   wallrunning: 0
   climbing: 0
+  dashing: 0
 --- !u!114 &3035918732613185087
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -200,6 +240,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc0805b51c06c2b4ebb5f06a11fff84b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  orientation: {fileID: 0}
+  playerCam: {fileID: 0}
+  dashForce: 0
+  dashUpwardForce: 0
+  maxDashYSpeed: 0
+  dashDuration: 0
+  cam: {fileID: 0}
+  dashFov: 0
+  useCameraForward: 1
+  allowAllDirections: 1
+  disableGravity: 0
+  resetVel: 1
+  dashCd: 0
+  dashKey: 101
 --- !u!1 &4225903648684295569
 GameObject:
   m_ObjectHideFlags: 0

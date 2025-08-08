@@ -9,7 +9,7 @@ public class Dashing : MonoBehaviour
     public Transform playerCam;
     private Rigidbody rb;
     private Collider col;
-    private PhysicMaterial mat;
+    private PhysicsMaterial mat;
     private PlayerMovementAdvanced pm;
 
     [Header("Dashing")]
@@ -45,7 +45,7 @@ public class Dashing : MonoBehaviour
         pm = GetComponent<PlayerMovementAdvanced>();
         col = GetComponentInChildren<Collider>();
         mat = col.material;
-        originalDrag = rb.drag;
+        originalDrag = rb.linearDamping;
         originalDynamicFriction = mat.dynamicFriction;
         originalStaticFriction = mat.staticFriction;
     }
@@ -65,7 +65,7 @@ public class Dashing : MonoBehaviour
             return;
 
         dashCdTimer = dashCd;
-        rb.drag = 0f;
+        rb.linearDamping = 0f;
         mat.dynamicFriction = 0f;
         mat.staticFriction = 0f;
 
@@ -94,14 +94,14 @@ public class Dashing : MonoBehaviour
     private void DelayedDashForce()
     {
         if (resetVel)
-            rb.velocity = Vector3.zero;
+            rb.linearVelocity = Vector3.zero;
 
         rb.AddForce(delayedForceToApply, ForceMode.Impulse);
     }
 
     private void ResetDash()
     {
-        rb.drag = originalDrag;
+        rb.linearDamping = originalDrag;
         mat.dynamicFriction = originalDynamicFriction;
         mat.staticFriction = originalStaticFriction;
 

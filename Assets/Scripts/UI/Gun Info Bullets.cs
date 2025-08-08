@@ -16,7 +16,7 @@ public class GunInfoBullets : MonoBehaviour
 
     void Update()
     {
-        GameObject weapon = equipLogic.currentWeapon;
+        GameObject weapon = equipLogic.CurrentWeapon;
 
         // Only update if weapon changed
         if (weapon != lastWeapon)

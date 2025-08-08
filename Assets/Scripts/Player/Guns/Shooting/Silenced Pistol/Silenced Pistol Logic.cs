@@ -33,7 +33,7 @@ public class SilencedPistolLogic : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (equipLogic.currentWeapon == gameObject)
+        if (equipLogic.CurrentWeapon == gameObject)
         {
             if (Input.GetMouseButtonDown(0))
             {

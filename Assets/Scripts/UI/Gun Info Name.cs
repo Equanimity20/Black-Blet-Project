@@ -12,10 +12,8 @@ public class GunInfoName : MonoBehaviour
 
     void Update()
     {
-        GameObject weapon = equipLogic.currentWeapon;
-
-        if (weapon != null)
-            gameObject.GetComponent<TextMeshProUGUI>().text = weapon.name;
+        if (equipLogic.CurrentWeapon != null)
+            gameObject.GetComponent<TextMeshProUGUI>().text = equipLogic.CurrentWeaponName;
         else
             gameObject.GetComponent<TextMeshProUGUI>().text = null;
     }
