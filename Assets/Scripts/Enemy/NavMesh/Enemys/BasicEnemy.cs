@@ -9,7 +9,6 @@ public class BasicEnemy : MonoBehaviour, IDamageable
     private UnityEngine.AI.NavMeshAgent enemy;
     public Transform target;
     public Health hp;
-    public float distance;
     public bool CanAttack = true;
     public bool seenPlayer = false;
     public float viewDistance;

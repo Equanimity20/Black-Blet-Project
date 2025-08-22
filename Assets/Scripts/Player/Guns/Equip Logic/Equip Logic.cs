@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class EquipLogic : MonoBehaviour
 {
@@ -10,6 +12,7 @@ public class EquipLogic : MonoBehaviour
     {
         public WeaponSlot slot;
         public GameObject prefab;
+        public GameObject icon;
     }
 
     [Header("Weapon Slots")]
@@ -35,6 +38,13 @@ public class EquipLogic : MonoBehaviour
         {
             if (entry.prefab != null && !weaponPrefabs.ContainsKey(entry.slot))
                 weaponPrefabs.Add(entry.slot, entry.prefab);
+
+            if (entry.icon != null)
+            {
+                Color iconColor = entry.icon.GetComponent<RawImage>().color;
+                iconColor.a = 0.5f;
+                entry.icon.GetComponent<RawImage>().color = iconColor;
+            }
         }
     }
 
@@ -46,6 +56,26 @@ public class EquipLogic : MonoBehaviour
         }
 
         if (currentSlot == slot) return; // Already equipped
+
+        // Dim all icons
+        foreach (var entry in weaponList)
+        {
+            if (entry.icon != null)
+            {
+                Color iconColor = entry.icon.GetComponent<RawImage>().color;
+                iconColor.a = 0.5f;
+                entry.icon.GetComponent<RawImage>().color = iconColor;
+            }
+        }
+
+        // Highlight the selected slot's icon
+        var selectedEntry = weaponList.Find(e => e.slot == slot);
+        if (selectedEntry != null && selectedEntry.icon != null)
+        {
+            Color iconColor = selectedEntry.icon.GetComponent<RawImage>().color;
+            iconColor.a = 1f;
+            selectedEntry.icon.GetComponent<RawImage>().color = iconColor;
+        }
 
         UnequipWeapon();
 

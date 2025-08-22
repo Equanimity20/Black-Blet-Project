@@ -14,6 +14,10 @@ public class GunInfoBullets : MonoBehaviour
     private FieldInfo ammoField;
     private FieldInfo reserveField;
 
+    void Start()
+    {
+        gameObject.GetComponent<TextMeshProUGUI>().text = null;
+    }
     void Update()
     {
         GameObject weapon = equipLogic.CurrentWeapon;

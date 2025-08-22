@@ -7,6 +7,7 @@ public class Sliding : MonoBehaviour
     [Header("References")]
     public Transform orientation;
     public Transform playerObj;
+    public PlayerCam cam;
     private Rigidbody rb;
     private PlayerMovementAdvanced pm;
 
@@ -57,6 +58,16 @@ public class Sliding : MonoBehaviour
         playerObj.localScale = new Vector3(playerObj.localScale.x, slideYScale, playerObj.localScale.z);
         rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
 
+        float randomValue = Random.Range(0f, 1f);
+        if(randomValue < 0.5f)
+        {
+            cam.DoTilt(-5f, 0.25f);
+        }
+        else
+        {
+            cam.DoTilt(5f, 0.25f);
+        }
+
         slideTimer = maxSlideTime;
     }
 
@@ -87,5 +98,6 @@ public class Sliding : MonoBehaviour
         pm.sliding = false;
 
         playerObj.localScale = new Vector3(playerObj.localScale.x, startYScale, playerObj.localScale.z);
+        cam.DoTilt(0f, 0.25f);
     }
 }

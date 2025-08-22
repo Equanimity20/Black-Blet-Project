@@ -63,6 +63,7 @@ public class PlayerMovementAdvanced : MonoBehaviour
     
     Vector3 moveDirection;
     public Rigidbody rb;
+    public PlayerCam cam;
 
     [Header("State")]
     public MovementState state;
@@ -90,6 +91,7 @@ public class PlayerMovementAdvanced : MonoBehaviour
         rb.freezeRotation = true;
 
         readyToJump = true;
+        cam.DoFov(80f, 0.1f);
 
         startYScale = transform.localScale.y;
     }
@@ -211,6 +213,7 @@ public class PlayerMovementAdvanced : MonoBehaviour
         else if (grounded && Input.GetKey(sprintKey))
         {
             state = MovementState.sprinting;
+            cam.DoFov(85f, 0.25f);
             desiredMoveSpeed = sprintSpeed;
         }
 
