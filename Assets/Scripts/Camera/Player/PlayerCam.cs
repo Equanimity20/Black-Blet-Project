@@ -14,10 +14,17 @@ public class PlayerCam : MonoBehaviour
     public float xRotation;
     public float yRotation;
 
+    public float bobFrequency;
+    public float bobHeight;
+
+    private float originalYPos;
+
     private void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        originalYPos = camHolder.localPosition.y;
     }
 
     private void Update()
@@ -44,5 +51,16 @@ public class PlayerCam : MonoBehaviour
     public void DoTilt(float zTilt, float duration)
     {
         transform.DOLocalRotate(new Vector3(0, 0, zTilt), duration);
+    }
+
+    public void DoBobbing(float bobFrequency, float bobHeight)
+    {
+        Mathf.Sin(bobFrequency * Time.time);
+        gameObject.transform.localPosition = new Vector3(0, Mathf.Sin(bobFrequency * Time.time) * bobHeight, 0);
+    }
+
+    public void StopBobbing()
+    {
+        gameObject.transform.localPosition = new Vector3(0, originalYPos, 0);
     }
 }

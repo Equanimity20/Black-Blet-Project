@@ -14,9 +14,6 @@ public class PlayerMovementAdvanced : MonoBehaviour
     public float wallrunSpeed;
     public float climbSpeed;
 
-    public float speedIncreaseMultiplier;
-    public float slopeIncreaseMultiplier;
-
     public float maxYSpeed;
 
     public float groundDrag;
@@ -54,13 +51,13 @@ public class PlayerMovementAdvanced : MonoBehaviour
     public float maxSlopeAngle;
     private RaycastHit slopeHit;
     private bool exitingSlope;
-    
+
     [Header("References")]
     public Transform orientation;
 
     float horizontalInput;
     float verticalInput;
-    
+
     Vector3 moveDirection;
     public Rigidbody rb;
     public PlayerCam cam;
@@ -69,6 +66,7 @@ public class PlayerMovementAdvanced : MonoBehaviour
     public MovementState state;
     public enum MovementState
     {
+        idle,
         walking,
         sprinting,
         wallrunning,
@@ -80,7 +78,6 @@ public class PlayerMovementAdvanced : MonoBehaviour
     }
 
     public bool sliding;
-    public bool crouching;
     public bool wallrunning;
     public bool climbing;
     public bool dashing;
@@ -102,6 +99,7 @@ public class PlayerMovementAdvanced : MonoBehaviour
 
         MyInput();
         StateHandler();
+        ViewBobbing();
 
         if (state != MovementState.dashing)
             SpeedControl(); // 🛠 Don't limit speed during dash
@@ -119,6 +117,11 @@ public class PlayerMovementAdvanced : MonoBehaviour
         else
         {
             coyoteTimeCounter -= Time.deltaTime;
+        }
+
+        if (state != lastState)
+        {
+            cam.DoFov(80, 0.25f);
         }
     }
 
@@ -206,6 +209,7 @@ public class PlayerMovementAdvanced : MonoBehaviour
         else if (Input.GetKey(crouchKey))
         {
             state = MovementState.crouching;
+            cam.DoFov(75f, 0.25f);
             desiredMoveSpeed = crouchSpeed;
         }
 
@@ -218,10 +222,17 @@ public class PlayerMovementAdvanced : MonoBehaviour
         }
 
         // Mode - Walking
-        else if (grounded)
+        else if (grounded && (horizontalInput != 0 || verticalInput != 0))
         {
             state = MovementState.walking;
             desiredMoveSpeed = walkSpeed;
+        }
+        
+        // Mode - Idle
+        else if (grounded && horizontalInput == 0 && verticalInput == 0)
+        {
+            state = MovementState.idle;
+            desiredMoveSpeed = 0;
         }
 
         // Mode - Air
@@ -357,7 +368,7 @@ public class PlayerMovementAdvanced : MonoBehaviour
         }
 
         //limit y vel
-        if(maxYSpeed != 0 && rb.linearVelocity.y > maxYSpeed)
+        if (maxYSpeed != 0 && rb.linearVelocity.y > maxYSpeed)
         {
             Vector3 limitedVel = new Vector3(rb.linearVelocity.x, maxYSpeed, rb.linearVelocity.z);
             rb.linearVelocity = limitedVel;
@@ -382,7 +393,7 @@ public class PlayerMovementAdvanced : MonoBehaviour
 
     public bool OnSlope()
     {
-        if(Physics.Raycast(transform.position, Vector3.down, out slopeHit, playerHeight * 0.5f + 0.3f))
+        if (Physics.Raycast(transform.position, Vector3.down, out slopeHit, playerHeight * 0.5f + 0.3f))
         {
             float angle = Vector3.Angle(Vector3.up, slopeHit.normal);
             return angle < maxSlopeAngle && angle != 0;
@@ -394,5 +405,25 @@ public class PlayerMovementAdvanced : MonoBehaviour
     public Vector3 GetSlopeMoveDirection(Vector3 direction)
     {
         return Vector3.ProjectOnPlane(direction, slopeHit.normal).normalized;
+    }
+
+    public void ViewBobbing()
+    {
+        if (state == MovementState.walking || state == MovementState.sprinting || state == MovementState.wallrunning || state == MovementState.climbing)
+        {
+            cam.bobFrequency = 14f;
+            cam.bobHeight = 0.05f;
+            cam.DoBobbing(cam.bobFrequency, cam.bobHeight);
+        }
+        else if (state == MovementState.crouching)
+        {
+            cam.bobFrequency = 8f;
+            cam.bobHeight = 0.025f;
+            cam.DoBobbing(cam.bobFrequency, cam.bobHeight);
+        }
+        else
+        {
+            cam.StopBobbing();
+        }
     }
 }

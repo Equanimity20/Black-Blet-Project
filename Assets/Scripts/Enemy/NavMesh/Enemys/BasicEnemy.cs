@@ -154,10 +154,10 @@ public class BasicEnemy : MonoBehaviour, IDamageable
 
     public void TakeDamage(float damage, Vector3 hitDirection)
     {
-            EnemyHealth -= damage;
-            if (EnemyHealth <= 0)
-            {
-                ToggleRagdoll(true, hitDirection);
-            }
+        EnemyHealth -= damage;
+        if (EnemyHealth <= 0)
+        {
+            ToggleRagdoll(true, hitDirection);
+        }
     }
 }

@@ -10,16 +10,9 @@ public class WallRunningAdvanced : MonoBehaviour
     public float wallRunForce;
     public float wallJumpUpForce;
     public float wallJumpSideForce;
-    public float wallClimbSpeed;
-    public float maxWallRunTime;
-    private float wallRunTimer;
 
     [Header("Input")]
     public KeyCode jumpKey = KeyCode.Space;
-    public KeyCode upwardsRunKey = KeyCode.LeftShift;
-    public KeyCode downwardsRunKey = KeyCode.LeftControl;
-    private bool upwardsRunning;
-    private bool downwardsRunning;
     private float horizontalInput;
     private float verticalInput;
 
@@ -81,24 +74,11 @@ public class WallRunningAdvanced : MonoBehaviour
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
 
-        upwardsRunning = Input.GetKey(upwardsRunKey);
-        downwardsRunning = Input.GetKey(downwardsRunKey);
-
         // State 1 - Wallrunning
         if((wallLeft || wallRight) && verticalInput > 0 && AboveGround() && !exitingWall)
         {
             if (!pm.wallrunning)
                 StartWallRun();
-
-            // wallrun timer
-            if (wallRunTimer > 0)
-                wallRunTimer -= Time.deltaTime;
-
-            if(wallRunTimer <= 0 && pm.wallrunning)
-            {
-                exitingWall = true;
-                exitWallTimer = exitWallTime;
-            }
 
             // wall jump
             if (Input.GetKeyDown(jumpKey)) WallJump();
@@ -129,8 +109,6 @@ public class WallRunningAdvanced : MonoBehaviour
     {
         pm.wallrunning = true;
 
-        wallRunTimer = maxWallRunTime;
-
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
 
         // apply camera effects
@@ -152,12 +130,6 @@ public class WallRunningAdvanced : MonoBehaviour
 
         // forward force
         rb.AddForce(wallForward * wallRunForce, ForceMode.Force);
-
-        // upwards/downwards force
-        if (upwardsRunning)
-            rb.linearVelocity = new Vector3(rb.linearVelocity.x, wallClimbSpeed, rb.linearVelocity.z);
-        if (downwardsRunning)
-            rb.linearVelocity = new Vector3(rb.linearVelocity.x, -wallClimbSpeed, rb.linearVelocity.z);
 
         // push to wall force
         if (!(wallLeft && horizontalInput > 0) && !(wallRight && horizontalInput < 0))

@@ -4,28 +4,34 @@ using TMPro;
 
 public class GunInfoBullets : MonoBehaviour
 {
-    public EquipLogic equipLogic;
+    public InventorySystem invSys;
 
     public int currentAmmo;
     public int reserveAmmo;
+
+    public GameObject ammoIcon;
 
     private GameObject lastWeapon;
     private MonoBehaviour gunScript;
     private FieldInfo ammoField;
     private FieldInfo reserveField;
 
+    private InventorySystem.InventoryItem item => invSys.slotContents[invSys.publicSlotIndex];
+
     void Start()
     {
         gameObject.GetComponent<TextMeshProUGUI>().text = null;
+        ammoIcon.SetActive(false);
     }
     void Update()
     {
-        GameObject weapon = equipLogic.CurrentWeapon;
+        GameObject weapon = invSys.CurrentEquippedItem;
 
         // Only update if weapon changed
-        if (weapon != lastWeapon)
+        if (weapon != lastWeapon && item.itemType == InventorySystem.ItemType.Gun)
         {
             lastWeapon = weapon;
+            ammoIcon.SetActive(true);
             gunScript = null;
             ammoField = null;
             reserveField = null;
@@ -49,6 +55,10 @@ public class GunInfoBullets : MonoBehaviour
                     }
                 }
             }
+        }
+        else
+        {
+            ammoIcon.SetActive(false);
         }
 
         // Sync ammo values if we found a gun script

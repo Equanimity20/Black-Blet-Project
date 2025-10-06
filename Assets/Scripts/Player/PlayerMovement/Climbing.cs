@@ -108,16 +108,6 @@ public class Climbing : MonoBehaviour
     private void ClimbingMovement()
     {
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, climbSpeed, rb.linearVelocity.z);
-
-        float randomValue = Random.Range(0f, 1f);
-        if(randomValue < 0.5f)
-        {
-            cam.DoTilt(-5f, 0.25f);
-        }
-        else
-        {
-            cam.DoTilt(5f, 0.25f);
-        }
     }
 
     private void StopClimbing()
