@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,21 +10,21 @@ public class InventorySystem : MonoBehaviour
     {
         public string itemName;
         public GameObject prefab;
-        public Sprite iconSprite; // Keep as Sprite
+        public Sprite iconSprite;
         public ItemType itemType;
         [HideInInspector] public GameObject instantiatedObject;
-        [HideInInspector] public int slotIndex = -1; // -1 means not in toolbar
-        [HideInInspector] public bool newItem = false; // For UI Updates
+        [HideInInspector] public int slotIndex = -1;
+        [HideInInspector] public bool newItem = false;
     }
 
     [Header("Toolbar Settings")]
-    [SerializeField] private int toolbarSlots = 9; // Only toolbar slots available
+    [SerializeField] private int toolbarSlots = 9;
 
     [Header("UI References")]
-    public Transform toolbarParent; // Parent object for toolbar slot UI elements
+    public Transform toolbarParent;
 
     [Serializable]
-    public class ToolbarSlotUI // Array of RawImage components for each toolbar slot
+    public class ToolbarSlotUI
     {
         public RawImage slotImage;
         public Image iconImage;
@@ -37,21 +36,19 @@ public class InventorySystem : MonoBehaviour
     public List<InventoryItem> availableItems = new();
 
     [Header("Equipment Settings")]
-    public Transform equipmentParent; // Where equipped items appear (like camera transform)
+    public Transform equipmentParent;
     public Vector3 positionOffset = new Vector3(0.5f, -0.5f, 1.0f);
     public Vector3 rotationOffset = Vector3.zero;
     public enum ItemType { Gun, Melee, Throwable, Powerup }
 
-    // Toolbar slots - tracks what's in each slot
     private GameObject[] toolbarSlotObjects;
     public InventoryItem[] slotContents;
     [HideInInspector] public int publicSlotIndex;
 
-    // Currently equipped item
     private GameObject currentEquippedItem;
     private int currentEquippedSlot = -1;
 
-    // Properties for external access
+    [Header("External Access")]
     public int ToolbarSlots => toolbarSlots;
     public GameObject CurrentEquippedItem => currentEquippedItem;
     public int CurrentEquippedSlot => currentEquippedSlot;
@@ -78,7 +75,7 @@ public class InventorySystem : MonoBehaviour
     {
         for (int i = 0; i < toolbarSlotsUI.Length; i++)
         {
-            toolbarSlotsUI[i].iconImage.color = new Color(1f, 1f, 1f, 0f); // Hide icon
+            toolbarSlotsUI[i].iconImage.color = new Color(1f, 1f, 1f, 0f);
         }
     }
 
@@ -90,17 +87,15 @@ public class InventorySystem : MonoBehaviour
 
     private void InitializeItemIcons()
     {
-        // Initialize toolbar slot images
         if (toolbarSlotsUI != null)
         {
             for (int i = 0; i < toolbarSlotsUI.Length && i < toolbarSlots; i++)
             {
                 if (toolbarSlotsUI[i].iconImage != null)
                 {
-                    // Start with empty/transparent slots
                     toolbarSlotsUI[i].iconImage.sprite = null;
                     Color slotColor = toolbarSlotsUI[i].iconImage.color;
-                    slotColor.a = 0.3f; // Dim empty slots
+                    slotColor.a = 0.3f;
                     toolbarSlotsUI[i].iconImage.color = slotColor;
                 }
             }
@@ -109,16 +104,14 @@ public class InventorySystem : MonoBehaviour
 
     private void HandleInput()
     {
-        // Handle toolbar hotkeys (1-9, 0)
         if (Input.inputString.Length > 0)
         {
             char inputChar = Input.inputString[0];
 
-            // Handle number keys for toolbar
             if (char.IsDigit(inputChar))
             {
-                int keyPressed = inputChar == '0' ? 10 : (inputChar - '0'); // Convert '0' to 10, others to 1-9
-                int slotIndex = keyPressed - 1; // Convert to 0-based index
+                int keyPressed = inputChar == '0' ? 10 : (inputChar - '0');
+                int slotIndex = keyPressed - 1;
 
                 if (slotIndex >= 0 && slotIndex < toolbarSlots)
                 {
@@ -133,11 +126,10 @@ public class InventorySystem : MonoBehaviour
     {
         if (IsSlotOccupied(slotIndex))
         {
-            // If slot has item, equip it (or unequip if already equipped)
             if (currentEquippedSlot == slotIndex)
             {
                 UnequipItem();
-                ChangeSelectedSlot(-1); // Deselect all slots
+                ChangeSelectedSlot(-1);
             }
             else
             {
@@ -146,25 +138,29 @@ public class InventorySystem : MonoBehaviour
         }
     }
 
-    // Add item to specific toolbar slot
     public bool AddItemToSlot(InventoryItem item, int slotIndex)
     {
         if (!IsValidSlotIndex(slotIndex) || IsSlotOccupied(slotIndex))
             return false;
-
+        
         slotContents[slotIndex] = item;
         item.slotIndex = slotIndex;
+        
+        // Always create a new instantiated object for the item
+        // Destroy old one if it exists
+        if (item.instantiatedObject != null)
+        {
+            Destroy(item.instantiatedObject);
+        }
+        
         item.instantiatedObject = Instantiate(item.prefab);
-        item.instantiatedObject.SetActive(false); // Start inactive until equipped
+        item.instantiatedObject.SetActive(false);
 
-
-        // Update the UI slot image
         UpdateSlotUI(slotIndex);
 
         return true;
     }
 
-    // Helper method to create InventoryItem from GameObject
     public InventoryItem CreateInventoryItem(GameObject prefab, Sprite iconSprite, string itemName, ItemType itemType)
     {
         InventoryItem newItem = new InventoryItem();
@@ -173,19 +169,17 @@ public class InventorySystem : MonoBehaviour
         newItem.itemName = itemName;
         newItem.itemType = itemType;
         newItem.slotIndex = -1;
-        newItem.newItem = true; // Mark as new item for UI updates
+        newItem.newItem = true;
 
         return newItem;
     }
 
-    // Overloaded helper method with automatic name from GameObject
     public InventoryItem CreateInventoryItem(GameObject prefab, Sprite iconSprite, ItemType itemType)
     {
         string itemName = prefab != null ? prefab.name : "Unknown Item";
         return CreateInventoryItem(prefab, iconSprite, itemName, itemType);
     }
 
-    // Try to add item to first available toolbar slot
     public bool AddItemToToolbar(InventoryItem item)
     {
         for (int i = 0; i < toolbarSlots; i++)
@@ -197,10 +191,9 @@ public class InventorySystem : MonoBehaviour
         }
 
         Debug.Log($"Toolbar full! Cannot pick up {item.itemName}");
-        return false; // Toolbar full
+        return false;
     }
 
-    // Remove item from specific slot
     public InventoryItem RemoveItemFromSlot(int slotIndex)
     {
         if (!IsValidSlotIndex(slotIndex) || !IsSlotOccupied(slotIndex))
@@ -215,32 +208,54 @@ public class InventorySystem : MonoBehaviour
         slotContents[slotIndex] = null;
         item.slotIndex = -1;
 
-        // If this was the equipped item, unequip it
         if (slotIndex == currentEquippedSlot)
             UnequipItem();
 
-        // Update the UI slot image
         UpdateSlotUI(slotIndex);
 
-        Debug.Log($"Removed {item.itemName} from toolbar slot {slotIndex + 1}");
         return item;
     }
 
-    // Drop item from toolbar slot (for when player wants to make space)
     public bool DropItemFromSlot(int slotIndex)
     {
         InventoryItem item = RemoveItemFromSlot(slotIndex);
         if (item != null)
         {
-            Debug.Log($"Dropped {item.itemName}");
-            // Here you could spawn the item back into the world
-            // SpawnItemInWorld(item);
+            GameObject droppedItem = Instantiate(item.prefab, Camera.main.transform.position + Camera.main.transform.forward * 1.5f, Quaternion.identity);
+            
+            // Configure the pickup script on the dropped item with the correct data
+            var pickupScript = droppedItem.GetComponent<IPickUpItem>();
+            if (pickupScript != null)
+            {
+                // Get the specific script type (e.g., SilencedPistolLogic)
+                MonoBehaviour scriptComponent = pickupScript as MonoBehaviour;
+                if (scriptComponent != null)
+                {
+                    // Set the prefab reference
+                    var prefabField = scriptComponent.GetType().GetField("PrefabgameObject");
+                    if (prefabField != null)
+                    {
+                        prefabField.SetValue(scriptComponent, item.prefab);
+                    }
+                    
+                    // Set the icon
+                    var iconField = scriptComponent.GetType().GetField("Icon");
+                    if (iconField != null)
+                    {
+                        iconField.SetValue(scriptComponent, item.iconSprite);
+                    }
+                }
+            }
+            
+            Vector3 throwForce = Camera.main.transform.forward * 1.5f + Vector3.up * 1f + UnityEngine.Random.insideUnitSphere;
+            Vector3 TorqueForce = new Vector3(UnityEngine.Random.Range(-10f, 10f), UnityEngine.Random.Range(-10f, 10f), UnityEngine.Random.Range(-10f, 10f));
+            droppedItem.GetComponent<Rigidbody>().AddTorque(TorqueForce, ForceMode.Impulse);
+            droppedItem.GetComponent<Rigidbody>().AddForce(throwForce, ForceMode.Impulse);
             return true;
         }
         return false;
     }
 
-    // Equip item from toolbar slot
     public bool EquipItemFromSlot(int slotIndex)
     {
         if (!IsValidSlotIndex(slotIndex) || !IsSlotOccupied(slotIndex))
@@ -249,43 +264,35 @@ public class InventorySystem : MonoBehaviour
         InventoryItem item = slotContents[slotIndex];
 
         if (currentEquippedSlot == slotIndex)
-        {
-            return true; // Already equipped
-        }
-
-        // Update all slot UI to show equipped state
+            return true;
+        
         UpdateAllSlotsUI();
 
         UnequipItem();
 
-        // Get proper equip orientation from item if it implements IPickUpItem
         rotationOffset = (item.prefab != null && item.prefab.GetComponent<IPickUpItem>() != null) ? item.prefab.GetComponent<IPickUpItem>().SetProperEquipOrientation() : Vector3.zero;
 
-        // Equip new item
         if (item.prefab != null && equipmentParent != null)
         {
             currentEquippedItem = item.instantiatedObject;
             currentEquippedItem.SetActive(true);
-            currentEquippedItem.transform.SetParent(Camera.main.transform);
+            currentEquippedItem.transform.SetParent(equipmentParent);
             currentEquippedItem.GetComponent<Rigidbody>().isKinematic = true;
-            foreach (var collider in currentEquippedItem.GetComponents<BoxCollider>())
+            foreach (var collider in currentEquippedItem.GetComponents<Collider>())
                 collider.enabled = false;
             currentEquippedItem.name = item.instantiatedObject.name;
-            currentEquippedItem.transform.localPosition = positionOffset;
             currentEquippedItem.transform.localEulerAngles = rotationOffset;
+            currentEquippedItem.transform.localPosition = positionOffset;
             currentEquippedSlot = slotIndex;
         }
 
-        // Update UI to highlight equipped item
         UpdateAllSlotsUI();
 
-        //Change selected slot
         ChangeSelectedSlot(slotIndex);
 
         return true;
     }
 
-    // Unequip current item
     public void UnequipItem()
     {
         if (currentEquippedItem != null)
@@ -294,11 +301,10 @@ public class InventorySystem : MonoBehaviour
         currentEquippedItem = null;
         currentEquippedSlot = -1;
 
-        // Update UI to remove highlight
         UpdateAllSlotsUI();
+        ResetToolbarHeights();
     }
 
-    // Move/swap items between toolbar slots
     public bool MoveItem(int fromSlot, int toSlot)
     {
         if (!IsValidSlotIndex(fromSlot) || !IsValidSlotIndex(toSlot))
@@ -307,7 +313,6 @@ public class InventorySystem : MonoBehaviour
         if (!IsSlotOccupied(fromSlot))
             return false;
 
-        // If destination slot is occupied, swap items
         if (IsSlotOccupied(toSlot))
         {
             InventoryItem tempItem = slotContents[toSlot];
@@ -321,7 +326,6 @@ public class InventorySystem : MonoBehaviour
         }
         else
         {
-            // Move item to empty slot
             slotContents[toSlot] = slotContents[fromSlot];
             slotContents[fromSlot] = null;
             slotContents[toSlot].slotIndex = toSlot;
@@ -329,16 +333,17 @@ public class InventorySystem : MonoBehaviour
             Debug.Log($"Moved {slotContents[toSlot].itemName} from slot {fromSlot + 1} to slot {toSlot + 1}");
         }
 
-        // Update equipped slot if necessary
         if (currentEquippedSlot == fromSlot)
             currentEquippedSlot = toSlot;
         else if (currentEquippedSlot == toSlot && IsSlotOccupied(fromSlot))
             currentEquippedSlot = fromSlot;
 
+        UpdateSlotUI(fromSlot);
+        UpdateSlotUI(toSlot);
+
         return true;
     }
 
-    // Utility methods
     public bool IsValidSlotIndex(int slotIndex)
     {
         return slotIndex >= 0 && slotIndex < toolbarSlots;
@@ -346,7 +351,7 @@ public class InventorySystem : MonoBehaviour
 
     public bool IsSlotOccupied(int slotIndex)
     {
-        return IsValidSlotIndex(slotIndex) && slotContents[slotIndex] != null;
+        return IsValidSlotIndex(slotIndex) && slotContents[slotIndex] != null && slotContents[slotIndex].itemName != null;
     }
 
     public InventoryItem GetItemInSlot(int slotIndex)
@@ -363,7 +368,7 @@ public class InventorySystem : MonoBehaviour
             if (!IsSlotOccupied(i))
                 return i;
         }
-        return -1; // No empty slots
+        return -1;
     }
 
     public int GetItemCount()
@@ -382,20 +387,15 @@ public class InventorySystem : MonoBehaviour
         return GetItemCount() >= toolbarSlots;
     }
 
-    // Check if player can pick up an item (has space in toolbar)
     public bool CanPickupItem()
     {
         return !IsToolbarFull();
     }
 
-    // UI Management Methods
     private void UpdateSlotUI(int slotIndex)
     {
         if (toolbarSlotsUI == null || slotIndex < 0 || slotIndex >= toolbarSlotsUI.Length)
-        {
-            Debug.Log("Invalid slot index");
             return;
-        }
 
         ToolbarSlotUI slot = toolbarSlotsUI[slotIndex];
 
@@ -403,12 +403,12 @@ public class InventorySystem : MonoBehaviour
         {
             InventoryItem item = slotContents[slotIndex];
             slot.iconImage.sprite = item.iconSprite;
-            slot.iconImage.color = new Color(1f, 1f, 1f, slotIndex == currentEquippedSlot ? 1f : 0.7f); // Highlight if equipped
+            slot.iconImage.color = new Color(1f, 1f, 1f, slotIndex == currentEquippedSlot ? 1f : 0.7f);
         }
         else
         {
             slot.iconImage.sprite = null;
-            slot.iconImage.color = new Color(1f, 1f, 1f, 0f); // Hide icon
+            slot.iconImage.color = new Color(1f, 1f, 1f, 0f);
         }
     }
 
@@ -420,7 +420,6 @@ public class InventorySystem : MonoBehaviour
         }
     }
 
-    // Get list of all items currently in toolbar (useful for saving/loading)
     public List<InventoryItem> GetAllToolbarItems()
     {
         List<InventoryItem> items = new List<InventoryItem>();
@@ -434,7 +433,6 @@ public class InventorySystem : MonoBehaviour
         return items;
     }
 
-    // Clear all items from toolbar
     public void ClearToolbar()
     {
         for (int i = 0; i < toolbarSlots; i++)
@@ -445,10 +443,8 @@ public class InventorySystem : MonoBehaviour
             }
         }
         UnequipItem();
-        Debug.Log("Toolbar cleared");
     }
 
-    // Debug method to print toolbar contents
     public void PrintToolbarContents()
     {
         Debug.Log($"=== TOOLBAR ({toolbarSlots} slots) ===");
@@ -469,34 +465,51 @@ public class InventorySystem : MonoBehaviour
 
     public void ChangeSelectedSlot(int slotIndex)
     {
-        // Raise selected slot
         for (int i = 0; i < toolbarSlotsUI.Length; i++)
         {
-            //create variables
             Vector3 currentPos = toolbarSlotsUI[i].slotImage.transform.position;
             Vector3 slotTargetPos;
 
             Vector3 iconCurrentPos = toolbarSlotsUI[i].iconImage.transform.position;
             Vector3 iconTargetPos;
 
-            if (i == slotIndex && currentEquippedItem.activeSelf)
+            List<InventoryItem> item = new List<InventoryItem>(slotContents)
             {
-                // Raise selected slot
-                slotTargetPos = new Vector3(currentPos.x, originalY + 10f, currentPos.z);
-                iconTargetPos = new Vector3(iconCurrentPos.x, originalY + 10f, iconCurrentPos.z);
-            }
-            else
-            {
-                // Lower other slots to default position
-                slotTargetPos = new Vector3(currentPos.x, originalY - 10f, currentPos.z);
-                iconTargetPos = new Vector3(iconCurrentPos.x, originalY - 10f, iconCurrentPos.z);
-            }
+                slotContents[i]
+            };
 
-            // Smoothly move towards target
-            toolbarSlotsUI[i].slotImage.transform.position = Vector3.Lerp(currentPos, slotTargetPos, Time.deltaTime * 1000f);
-            toolbarSlotsUI[i].iconImage.transform.position = Vector3.Lerp(iconCurrentPos, iconTargetPos, Time.deltaTime * 1000f);
+            if(i == slotIndex)
+            {
+                if (currentEquippedItem == item[i]?.instantiatedObject)
+                {
+                    slotTargetPos = new Vector3(currentPos.x, originalY + 10f, currentPos.z);
+                    iconTargetPos = new Vector3(iconCurrentPos.x, originalY + 10f, iconCurrentPos.z);
+                }
+                else
+                {
+                    slotTargetPos = new Vector3(currentPos.x, originalY, currentPos.z);
+                    iconTargetPos = new Vector3(iconCurrentPos.x, originalY, iconCurrentPos.z);
+                }
+            
+                toolbarSlotsUI[i].slotImage.transform.position = Vector3.Lerp(currentPos, slotTargetPos, Time.deltaTime * 1000f);
+                toolbarSlotsUI[i].iconImage.transform.position = Vector3.Lerp(iconCurrentPos, iconTargetPos, Time.deltaTime * 1000f);
+            }
         }
 
         currentEquippedSlot = slotIndex;
+    }
+
+    void ResetToolbarHeights()
+    {
+        for (int i = 0; i < toolbarSlotsUI.Length; i++)
+        {
+            Vector3 currentPos = toolbarSlotsUI[i].slotImage.transform.position;
+            Vector3 slotTargetPos = new Vector3(currentPos.x, originalY, currentPos.z);
+            toolbarSlotsUI[i].slotImage.transform.position = Vector3.Lerp(currentPos, slotTargetPos, Time.deltaTime * 1000f);
+
+            Vector3 iconCurrentPos = toolbarSlotsUI[i].iconImage.transform.position;
+            Vector3 iconTargetPos = new Vector3(iconCurrentPos.x, originalY, iconCurrentPos.z);
+            toolbarSlotsUI[i].iconImage.transform.position = Vector3.Lerp(iconCurrentPos, iconTargetPos, Time.deltaTime * 1000f);
+        }
     }
 }
