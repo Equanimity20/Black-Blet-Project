@@ -66,8 +66,6 @@ public class GrappleGunLogic : MonoBehaviour, IPickUpItem
         grappleLineRenderer.endColor = Color.gray;
         grappleLineRenderer.startWidth = 0.1f;
         grappleLineRenderer.endWidth = 0.1f;
-        
-        Debug.Log("Line material created and assigned");
     }
 
     void Update()
@@ -75,7 +73,6 @@ public class GrappleGunLogic : MonoBehaviour, IPickUpItem
         // Re-assign material if it gets lost
         if (grappleLineRenderer != null && (grappleLineRenderer.material == null || grappleLineRenderer.material.shader == null))
         {
-            Debug.LogWarning("Line renderer material was lost! Recreating...");
             CreateLineMaterial();
         }
         
@@ -105,7 +102,6 @@ public class GrappleGunLogic : MonoBehaviour, IPickUpItem
                     hitPointVector3 = hit.point;
                     isGrappling = true;
                     grappleDebouncer = false;
-                    Debug.Log("Grapple point found at: " + hit.point);
                 }
                 else
                 {
@@ -122,6 +118,15 @@ public class GrappleGunLogic : MonoBehaviour, IPickUpItem
             if(canGrapple && isGrappling)
             {
                 GrappleLogic();
+            }
+
+            if(!canGrapple)
+            {
+                if (!grappleDebouncer)
+                {
+                    grappleDebouncer = true;
+                    StartCoroutine(GrappleGunSpinny());
+                }
             }
         }
     }
@@ -166,7 +171,6 @@ public class GrappleGunLogic : MonoBehaviour, IPickUpItem
         if (grappleLineRenderer != null)
         {
             CreateLineMaterial();
-            Debug.Log("Material recreated on enable");
         }
     }
 
@@ -192,6 +196,24 @@ public class GrappleGunLogic : MonoBehaviour, IPickUpItem
             Vector3 finalPos = hitPointVector3 - direction.normalized;
             Player.transform.position = finalPos;
         }
+    }
+
+    IEnumerator GrappleGunSpinny()
+    {
+        float elapsed = 0f;
+        Quaternion startRotation = transform.localRotation;
+
+        // Spin 360 degrees around the Z axis over the full grappleCooldown
+        while (elapsed < grappleCooldown)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / grappleCooldown);
+            transform.localRotation = startRotation * Quaternion.Euler(-(t * 360f), 0f, 0f);
+            yield return null;
+        }
+
+        // Snap back to original rotation when done
+        transform.localRotation = startRotation;
     }
 
     public void PickUp()

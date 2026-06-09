@@ -3,7 +3,7 @@ using UnityEngine;
 public class Dead : MonoBehaviour
 {
 
-    public Health health;
+    public PlayerStats ps;
     public GameObject overlay;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -15,7 +15,7 @@ public class Dead : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (health.currentHealth == 0)
+        if (ps.Dead)
         {
             OnEnable();
         }

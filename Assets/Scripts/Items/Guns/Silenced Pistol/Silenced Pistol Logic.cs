@@ -12,7 +12,7 @@ public class SilencedPistolLogic : MonoBehaviour, IPickUpItem
 
     [Header("Weapon Settings")]
     public float damage = 10f;
-    public float reloadTime = 1.5f;
+    public float reloadTime = 0.25f;
     public int maxAmmoReserve = 60;
     public int maxAmmoClip = 10;
     public static int currentAmmo;
@@ -50,7 +50,6 @@ public class SilencedPistolLogic : MonoBehaviour, IPickUpItem
                 Reload();
             }
         }
-
     }
 
     void Shoot()
@@ -109,11 +108,26 @@ public class SilencedPistolLogic : MonoBehaviour, IPickUpItem
         properEquipOrientation = new Vector3(180f, 90f, 180f);
         return properEquipOrientation;
     }
+
     IEnumerator ReloadCoroutine()
     {
-        yield return new WaitForSeconds(reloadTime);
-        int ReserveSubtractAmount = maxAmmoClip - currentAmmo;
-        int ammoToReload = Mathf.Min(ReserveSubtractAmount, reserveAmmo);
+        float elapsed = 0f;
+        Quaternion startRotation = transform.localRotation;
+
+        // Spin 360 degrees around the Z axis over the full reloadTime
+        while (elapsed < reloadTime)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / reloadTime);
+            transform.localRotation = startRotation * Quaternion.Euler(0f, 0f, t * 360f);
+            yield return null;
+        }
+
+        // Snap back to original rotation when done
+        transform.localRotation = startRotation;
+
+        int reserveSubtractAmount = maxAmmoClip - currentAmmo;
+        int ammoToReload = Mathf.Min(reserveSubtractAmount, reserveAmmo);
         currentAmmo += ammoToReload;
         reserveAmmo -= ammoToReload;
         isReloading = false;

@@ -1,36 +1,5 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &2034545178895995264
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 5444332969298965753}
-  m_Layer: 0
-  m_Name: Hutling Raycast Point
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &5444332969298965753
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2034545178895995264}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 7398775036365492541}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3828029709784111412
 GameObject:
   m_ObjectHideFlags: 0
@@ -46,9 +15,12 @@ GameObject:
   - component: {fileID: 4286860521214453687}
   - component: {fileID: 5523607094927161822}
   - component: {fileID: 1913846224250580270}
-  m_Layer: 0
+  - component: {fileID: 8201237592117514287}
+  - component: {fileID: 7125485974522271345}
+  - component: {fileID: 4573634676746813609}
+  m_Layer: 8
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -69,7 +41,6 @@ Transform:
   - {fileID: 7841832817992721963}
   - {fileID: 5277126920200578017}
   - {fileID: 2102969813513727048}
-  - {fileID: 5444332969298965753}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!54 &4424779482404691103
@@ -114,16 +85,14 @@ MonoBehaviour:
   moveSpeed: 0
   walkSpeed: 7
   sprintSpeed: 10
-  dashSpeed: 0
-  dashSpeedChangeFactor: 0
+  dashSpeed: 80
+  dashSpeedChangeFactor: 50
   slideSpeed: 30
-  wallrunSpeed: 8.5
+  wallrunSpeed: 9
   climbSpeed: 3
-  speedIncreaseMultiplier: 1.5
-  slopeIncreaseMultiplier: 2.5
-  maxYSpeed: 0
+  maxYSpeed: 15
   groundDrag: 4
-  jumpForce: 18
+  jumpForce: 13
   jumpCooldown: 0.25
   airMultiplier: 0.4
   crouchSpeed: 3.5
@@ -141,9 +110,9 @@ MonoBehaviour:
   maxSlopeAngle: 40
   orientation: {fileID: 5277126920200578017}
   rb: {fileID: 0}
+  cam: {fileID: 0}
   state: 0
   sliding: 0
-  crouching: 0
   wallrunning: 0
   climbing: 0
   dashing: 0
@@ -161,6 +130,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   orientation: {fileID: 5277126920200578017}
   playerObj: {fileID: 7841832817992721963}
+  cam: {fileID: 0}
   maxSlideTime: 0.75
   slideForce: 200
   slideYScale: 0.5
@@ -186,16 +156,12 @@ MonoBehaviour:
   wallRunForce: 200
   wallJumpUpForce: 3.5
   wallJumpSideForce: 12
-  wallClimbSpeed: 3
-  maxWallRunTime: 1.5
   jumpKey: 32
-  upwardsRunKey: 304
-  downwardsRunKey: 306
   wallCheckDistance: 0.7
   minJumpHeight: 2
   exitWallTime: 0.2
   useGravity: 1
-  gravityCounterForce: 0
+  gravityCounterForce: 30
   orientation: {fileID: 5277126920200578017}
   cam: {fileID: 0}
 --- !u!114 &5523607094927161822
@@ -212,6 +178,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   orientation: {fileID: 5277126920200578017}
   rb: {fileID: 4424779482404691103}
+  cam: {fileID: 0}
   pm: {fileID: 7050468062953168998}
   whatIsWall:
     serializedVersion: 2
@@ -240,20 +207,66 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc0805b51c06c2b4ebb5f06a11fff84b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  orientation: {fileID: 0}
+  orientation: {fileID: 5277126920200578017}
   playerCam: {fileID: 0}
-  dashForce: 0
-  dashUpwardForce: 0
-  maxDashYSpeed: 0
-  dashDuration: 0
+  dashForce: 40
+  dashUpwardForce: 2
+  maxDashYSpeed: 15
+  dashDuration: 0.25
   cam: {fileID: 0}
-  dashFov: 0
+  dashFov: 95
   useCameraForward: 1
   allowAllDirections: 1
-  disableGravity: 0
+  disableGravity: 1
   resetVel: 1
-  dashCd: 0
+  dashCd: 1.5
   dashKey: 101
+--- !u!114 &8201237592117514287
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3828029709784111412}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1a75b19c03c7e04f906576dc8c776d9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pm: {fileID: 7050468062953168998}
+  speedlines: {fileID: 0}
+  currentSpeed: 0
+  lastPosition: {x: 0, y: 0, z: 0}
+--- !u!114 &7125485974522271345
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3828029709784111412}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33f65d361188ce54d979e6c283ae1d11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  volume: {fileID: 0}
+  vignette: {fileID: 0}
+  health: {fileID: 0}
+  intensity: 0
+--- !u!114 &4573634676746813609
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3828029709784111412}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2626217549a6e5a42a50424fe88f327d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InventoryInputSystem
+  invsys: {fileID: 0}
+  orientation: {fileID: 5277126920200578017}
 --- !u!1 &4225903648684295569
 GameObject:
   m_ObjectHideFlags: 0
@@ -263,7 +276,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5277126920200578017}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Orientation
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -296,7 +309,7 @@ GameObject:
   - component: {fileID: 7841832817992721963}
   - component: {fileID: 5240470459882734857}
   - component: {fileID: 1971186702871385331}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: PlayerObj
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -358,7 +371,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2102969813513727048}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: CameraPos
   m_TagString: Untagged
   m_Icon: {fileID: 0}

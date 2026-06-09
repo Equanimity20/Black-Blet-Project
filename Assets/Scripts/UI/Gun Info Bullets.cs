@@ -61,6 +61,7 @@ public class GunInfoBullets : MonoBehaviour
             else
             {
                 ammoIcon.SetActive(false);
+                gameObject.GetComponent<TextMeshProUGUI>().text = null;
             }
 
             // Sync ammo values if we found a gun script

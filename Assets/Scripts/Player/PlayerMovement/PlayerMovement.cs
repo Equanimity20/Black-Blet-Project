@@ -17,6 +17,7 @@ public class PlayerMovementAdvanced : MonoBehaviour
     public float maxYSpeed;
 
     public float groundDrag;
+    private Vector3 lastPosition;
 
     [Header("Jumping")]
     public float jumpForce;
@@ -95,14 +96,15 @@ public class PlayerMovementAdvanced : MonoBehaviour
 
     private void Update()
     {
+
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f, whatIsGround);
 
         MyInput();
         StateHandler();
         ViewBobbing();
 
-        if (state != MovementState.dashing)
-            SpeedControl(); // 🛠 Don't limit speed during dash
+        if (state != MovementState.dashing && state != MovementState.wallrunning && state != MovementState.sliding)
+            SpeedControl();
 
         // handle drag
         if (state == MovementState.walking || state == MovementState.sprinting || state == MovementState.crouching)
@@ -290,7 +292,6 @@ public class PlayerMovementAdvanced : MonoBehaviour
     private float speedChangeFactor;
     private IEnumerator SmoothlyLerpMoveSpeed()
     {
-        // smoothly lerp movementSpeed to desired value
         float time = 0;
         float difference = Mathf.Abs(desiredMoveSpeed - moveSpeed);
         float startValue = moveSpeed;
@@ -300,9 +301,7 @@ public class PlayerMovementAdvanced : MonoBehaviour
         while (time < difference)
         {
             moveSpeed = Mathf.Lerp(startValue, desiredMoveSpeed, time / difference);
-
             time += Time.deltaTime * boostFactor;
-
             yield return null;
         }
 
@@ -314,14 +313,10 @@ public class PlayerMovementAdvanced : MonoBehaviour
     private void MovePlayer()
     {
         if (state == MovementState.dashing)
-        {
             return;
-        }
 
-        // calculate movement direction
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
-        // on slope
         if (OnSlope() && !exitingSlope)
         {
             rb.AddForce(GetSlopeMoveDirection(moveDirection) * moveSpeed * 20f, ForceMode.Force);
@@ -329,37 +324,29 @@ public class PlayerMovementAdvanced : MonoBehaviour
             if (rb.linearVelocity.y > 0)
                 rb.AddForce(Vector3.down * 80f, ForceMode.Force);
         }
-
-        // on ground
         else if (grounded)
         {
             rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
         }
-        // in air
         else if (!grounded)
         {
             rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
         }
 
-        // turn gravity off while on slope
         rb.useGravity = !OnSlope();
     }
 
     private void SpeedControl()
     {
-        // limiting speed on slope
         if (OnSlope() && !exitingSlope)
         {
             if (rb.linearVelocity.magnitude > moveSpeed)
                 rb.linearVelocity = rb.linearVelocity.normalized * moveSpeed;
         }
-
-        // limiting speed on ground or in air
         else
         {
             Vector3 flatVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
 
-            // limit velocity if needed
             if (flatVel.magnitude > moveSpeed)
             {
                 Vector3 limitedVel = flatVel.normalized * moveSpeed;
@@ -367,11 +354,9 @@ public class PlayerMovementAdvanced : MonoBehaviour
             }
         }
 
-        //limit y vel
         if (maxYSpeed != 0 && rb.linearVelocity.y > maxYSpeed)
         {
-            Vector3 limitedVel = new Vector3(rb.linearVelocity.x, maxYSpeed, rb.linearVelocity.z);
-            rb.linearVelocity = limitedVel;
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x, maxYSpeed, rb.linearVelocity.z);
         }
     }
 
@@ -379,15 +364,14 @@ public class PlayerMovementAdvanced : MonoBehaviour
     {
         exitingSlope = true;
 
-        // reset y velocity
-        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+        //rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
 
         rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
     }
+
     private void ResetJump()
     {
         readyToJump = true;
-
         exitingSlope = false;
     }
 

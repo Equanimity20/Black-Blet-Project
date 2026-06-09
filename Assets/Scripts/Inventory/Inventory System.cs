@@ -146,8 +146,6 @@ public class InventorySystem : MonoBehaviour
         slotContents[slotIndex] = item;
         item.slotIndex = slotIndex;
         
-        // Always create a new instantiated object for the item
-        // Destroy old one if it exists
         if (item.instantiatedObject != null)
         {
             Destroy(item.instantiatedObject);
@@ -223,22 +221,18 @@ public class InventorySystem : MonoBehaviour
         {
             GameObject droppedItem = Instantiate(item.prefab, Camera.main.transform.position + Camera.main.transform.forward * 1.5f, Quaternion.identity);
             
-            // Configure the pickup script on the dropped item with the correct data
             var pickupScript = droppedItem.GetComponent<IPickUpItem>();
             if (pickupScript != null)
             {
-                // Get the specific script type (e.g., SilencedPistolLogic)
                 MonoBehaviour scriptComponent = pickupScript as MonoBehaviour;
                 if (scriptComponent != null)
                 {
-                    // Set the prefab reference
                     var prefabField = scriptComponent.GetType().GetField("PrefabgameObject");
                     if (prefabField != null)
                     {
                         prefabField.SetValue(scriptComponent, item.prefab);
                     }
                     
-                    // Set the icon
                     var iconField = scriptComponent.GetType().GetField("Icon");
                     if (iconField != null)
                     {
@@ -267,19 +261,30 @@ public class InventorySystem : MonoBehaviour
             return true;
         
         UpdateAllSlotsUI();
-
         UnequipItem();
 
-        rotationOffset = (item.prefab != null && item.prefab.GetComponent<IPickUpItem>() != null) ? item.prefab.GetComponent<IPickUpItem>().SetProperEquipOrientation() : Vector3.zero;
+        // Get rotation from the instantiated object rather than prefab —
+        // prefab may be a destroyed scene reference (Unity's null check returns true for destroyed objects)
+        rotationOffset = (item.instantiatedObject != null && item.instantiatedObject.GetComponent<IPickUpItem>() != null)
+            ? item.instantiatedObject.GetComponent<IPickUpItem>().SetProperEquipOrientation()
+            : Vector3.zero;
 
-        if (item.prefab != null && equipmentParent != null)
+        // FIX: was "item.prefab != null" — if PrefabgameObject pointed to a scene object that was
+        // destroyed after pickup, Unity's null check returns true and this block was silently skipped,
+        // preventing the item from ever being equipped. Use item.instantiatedObject instead,
+        // which is always a live scene object created by AddItemToSlot.
+        if (item.instantiatedObject != null && equipmentParent != null)
         {
             currentEquippedItem = item.instantiatedObject;
             currentEquippedItem.SetActive(true);
             currentEquippedItem.transform.SetParent(equipmentParent);
-            currentEquippedItem.GetComponent<Rigidbody>().isKinematic = true;
+
+            var rb = currentEquippedItem.GetComponent<Rigidbody>();
+            if (rb != null) rb.isKinematic = true;
+
             foreach (var collider in currentEquippedItem.GetComponents<Collider>())
                 collider.enabled = false;
+
             currentEquippedItem.name = item.instantiatedObject.name;
             currentEquippedItem.transform.localEulerAngles = rotationOffset;
             currentEquippedItem.transform.localPosition = positionOffset;
@@ -287,7 +292,6 @@ public class InventorySystem : MonoBehaviour
         }
 
         UpdateAllSlotsUI();
-
         ChangeSelectedSlot(slotIndex);
 
         return true;
