@@ -10,11 +10,13 @@ public class Sliding : MonoBehaviour
     public PlayerCam cam;
     private Rigidbody rb;
     private PlayerMovementAdvanced pm;
+    private PlayerStats ps;
 
     [Header("Sliding")]
     public float maxSlideTime;
     public float slideForce;
     private float slideTimer;
+    private float entrySpeedCap;
 
     public float slideYScale;
     private float startYScale;
@@ -29,6 +31,7 @@ public class Sliding : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         pm = GetComponent<PlayerMovementAdvanced>();
+        ps = GetComponent<PlayerStats>();
 
         startYScale = playerObj.localScale.y;
     }
@@ -43,6 +46,11 @@ public class Sliding : MonoBehaviour
 
         if (Input.GetKeyUp(slideKey) && pm.sliding)
             StopSlide();
+
+        if (ps.speed >= 50f)
+            slideForce = 1f;
+        else
+            slideForce = 1.1f;
     }
 
     private void FixedUpdate()
@@ -54,6 +62,7 @@ public class Sliding : MonoBehaviour
     private void StartSlide()
     {
         pm.sliding = true;
+        entrySpeedCap = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z).magnitude;
 
         playerObj.localScale = new Vector3(playerObj.localScale.x, slideYScale, playerObj.localScale.z);
         rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
@@ -87,6 +96,13 @@ public class Sliding : MonoBehaviour
         else
         {
             rb.AddForce(pm.GetSlopeMoveDirection(inputDirection) * slideForce, ForceMode.Force);
+        }
+
+        Vector3 flatVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+        if (flatVel.magnitude > entrySpeedCap)
+        {
+            Vector3 limited = flatVel.normalized * entrySpeedCap;
+            rb.linearVelocity = new Vector3(limited.x, rb.linearVelocity.y, limited.z);
         }
 
         if (slideTimer <= 0)

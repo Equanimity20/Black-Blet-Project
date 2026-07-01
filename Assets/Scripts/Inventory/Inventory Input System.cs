@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 using UnityEngine;
 
 public class InventoryInputSystem : MonoBehaviour
@@ -26,6 +25,8 @@ public class InventoryInputSystem : MonoBehaviour
                     if (Input.GetKeyDown(KeyCode.F))
                     {
                         hit.collider.GetComponent<IPickUpItem>().PickUp();
+                        Debug.Log("Picked up: " + hit.collider.gameObject.name);
+                        Destroy(hit.collider.gameObject);
                     }
                 }
             }

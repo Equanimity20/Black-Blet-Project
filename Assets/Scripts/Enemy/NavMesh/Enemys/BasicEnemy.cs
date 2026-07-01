@@ -1,117 +1,116 @@
+using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-
 
 public class BasicEnemy : MonoBehaviour, IDamageable
 {
     [Header("Enemy Settings")]
     private UnityEngine.AI.NavMeshAgent enemy;
     public Transform target;
-    public Health hp;
+    public PlayerStats ps;
     public bool CanAttack = true;
     public bool seenPlayer = false;
     public float viewDistance;
     public float ViewConeAngularWidth;
     public float EnemyHealth = 1f;
+    public PlayerCam cam;
     private float timeSinceLastSeen = Mathf.Infinity;
 
-    [Header("Ragdoll Settings")]
-    public List<Rigidbody> rb;
-    public List<Collider> colliders;
-    public List<CharacterJoint> joints;
-    public bool isRagdollOn = false;
+    [Header("Explosion Settings")]
+    public float radius = 2.5f;
+    public int maxHits = 25;
+    public float MaxDmg = 50f;
+    public float MinDmg = 1f;
+    public float explosionForce;
+    public LayerMask HitLayer;
+    public LayerMask BlockLayer;
+    public GameObject explosionEffectParent;
+
+    [Header("Camera Shake Settings")]
+    public float shakeDuration;
+    public float shakeStrength;
+
+    private Collider[] Hits;
 
     void Start()
     {
         enemy = gameObject.GetComponent<UnityEngine.AI.NavMeshAgent>();
-        ToggleRagdoll(false, Vector3.zero); // Disable ragdoll
-        rb = new List<Rigidbody>(GetComponentsInChildren<Rigidbody>());
-        colliders = new List<Collider>(GetComponentsInChildren<Collider>());
-        joints = new List<CharacterJoint>(GetComponentsInChildren<CharacterJoint>());
+        explosionEffectParent.SetActive(false);
     }
 
     void Update()
     {
-        if (!isRagdollOn)
+        timeSinceLastSeen += Time.deltaTime;
+        Vector3 origin = enemy.transform.position;
+        Vector3 directionToTarget = (target.position - origin).normalized;
+        float distanceToTarget = Vector3.Distance(origin, target.position);
+        float angleToTarget = Vector3.Angle(enemy.transform.forward, directionToTarget);
+
+        bool isInView = distanceToTarget < viewDistance && angleToTarget < ViewConeAngularWidth;
+        bool isVisible = false;
+
+        if (isInView)
         {
-            timeSinceLastSeen += Time.deltaTime;
-
-            Vector3 origin = enemy.transform.position;
-            Vector3 directionToTarget = (target.position - origin).normalized;
-            float distanceToTarget = Vector3.Distance(origin, target.position);
-            float angleToTarget = Vector3.Angle(enemy.transform.forward, directionToTarget);
-
-            bool isInView = distanceToTarget < viewDistance && angleToTarget < ViewConeAngularWidth;
-            bool isVisible = false;
-
-            if (isInView)
+            // Perform raycast to check line of sight
+            RaycastHit hit;
+            if (Physics.Raycast(origin, directionToTarget, out hit, viewDistance))
             {
-                // Perform raycast to check line of sight
-                RaycastHit hit;
-                if (Physics.Raycast(origin, directionToTarget, out hit, viewDistance))
+                if (hit.transform == target)
                 {
-                    if (hit.transform == target)
-                    {
-                        isVisible = true;
-                    }
+                    isVisible = true;
                 }
             }
-
-            if (isVisible)
-            {
-                if (!seenPlayer)
-                {
-                    Debug.Log("Player spotted!");
-                }
-
-                seenPlayer = true;
-                timeSinceLastSeen = 0f;
-            }
-            else if (seenPlayer && timeSinceLastSeen >= 10f)
-            {
-                seenPlayer = false;
-                Debug.Log("Lost sight of player after 10 seconds.");
-            }
-
-            // Attack if close enough
-            if (distanceToTarget < 1f && CanAttack)
-            {
-                Attack();
-                CanAttack = false;
-            }
-
-            if (EnemyHealth <= 0)
-            {
-                ToggleRagdoll(true, Vector3.zero);
-            }
-
-            // --- Visualization ---
-            Vector3 forward = enemy.transform.forward;
-            Vector3 leftBoundary = Quaternion.AngleAxis(-ViewConeAngularWidth, Vector3.up) * forward;
-            Vector3 rightBoundary = Quaternion.AngleAxis(ViewConeAngularWidth, Vector3.up) * forward;
-
-            Debug.DrawRay(origin, forward * viewDistance, Color.green);
-            Debug.DrawRay(origin, leftBoundary * viewDistance, Color.yellow);
-            Debug.DrawRay(origin, rightBoundary * viewDistance, Color.yellow);
         }
-            
+
+        if (isVisible)
+        {
+            if (!seenPlayer)
+            {
+                Debug.Log("Player spotted!");
+            }
+
+            seenPlayer = true;
+            timeSinceLastSeen = 0f;
+        }
+        else if (seenPlayer && timeSinceLastSeen >= 10f)
+        {
+            seenPlayer = false;
+            print("Lost sight of player after 10 seconds.");
+        }
+
+        // Attack if close enough
+        if (distanceToTarget < 1f && CanAttack)
+        {
+            Attack();
+            CanAttack = false;
+        }
+
+        // --- Visualization ---
+        Vector3 forward = enemy.transform.forward;
+        Vector3 leftBoundary = Quaternion.AngleAxis(-ViewConeAngularWidth, Vector3.up) * forward;
+        Vector3 rightBoundary = Quaternion.AngleAxis(ViewConeAngularWidth, Vector3.up) * forward;
+
+        Debug.DrawRay(origin, forward * viewDistance, Color.green);
+        Debug.DrawRay(origin, leftBoundary * viewDistance, Color.yellow);
+        Debug.DrawRay(origin, rightBoundary * viewDistance, Color.yellow); 
+    }
+
+    public void DestroyEnemy()
+    {
+        Destroy(gameObject);
     }
 
     void FixedUpdate()
     {
-        if(!isRagdollOn)
+        if (seenPlayer)
         {
-            if (seenPlayer)
-            {
-                enemy.SetDestination(target.position);
-            }
+            enemy.SetDestination(target.position);
         }
     }
 
     void Attack()
     {
-        hp.damageValue += 5f;
+        ps.damageValue += 5f;
         StartCoroutine(WaitAndContinue());
     }
 
@@ -121,35 +120,73 @@ public class BasicEnemy : MonoBehaviour, IDamageable
         CanAttack = true;
     }
 
-    public void ToggleRagdoll(bool RagdollOn, Vector3 forceDirection)
+    public void ExplodeOnDeath()
     {
-        isRagdollOn = RagdollOn;
-
-        foreach (var col in colliders)
+        if (explosionEffectParent != null)
         {
-            if (col != null)
+            foreach (ParticleSystem ps in explosionEffectParent.GetComponentsInChildren<ParticleSystem>())
             {
-                col.enabled = RagdollOn;
-            }
-        }
-
-        foreach (var rigidbody in rb)
-        {
-            if (rigidbody != null)
-            {
-                rigidbody.isKinematic = !RagdollOn;
-                if (RagdollOn)
+                //play particle systems
+                if (ps == null || ps.gameObject == null) continue;
+                GameObject instance = Instantiate(ps.gameObject, transform.position, transform.rotation);
+                ParticleSystem instancePs = instance.GetComponent<ParticleSystem>();
+                if (instancePs != null)
                 {
-                    float knockbackForce = 25f; // Adjust as needed
-                    rigidbody.AddForce(forceDirection * knockbackForce, ForceMode.Impulse);
+                    instancePs.Play();
+                    Destroy(instance, instancePs.main.duration);
+                }
+                else
+                {
+                    Destroy(instance);
                 }
             }
         }
 
-        if (enemy != null)
+        //Create overlapsphere to detect objects in explosion radius
+        int hits = Physics.OverlapSphereNonAlloc(transform.position, radius, Hits, HitLayer.value);
+
+        for (int i = 0; i < hits; i++)
         {
-            enemy.enabled = !RagdollOn;
+            if(Hits[i].attachedRigidbody == gameObject.GetComponent<Rigidbody>()) continue;
+
+            //Find rigidbody
+            if (Hits[i].attachedRigidbody != null)
+            {
+                //Calculate shake strength and duration based on distance from explosion
+                float distance = Vector3.Distance(transform.position, Hits[i].transform.position);
+                Vector3 dir = (Hits[i].transform.position - transform.position).normalized;
+                shakeStrength = Mathf.Clamp01(1 - (distance / radius)) * (explosionForce / 5000) * 0.1f;
+                shakeDuration = Mathf.Clamp01(1 - (distance / radius)) * 1.5f;
+
+                //check if blocked
+                if (!Physics.Raycast(transform.position, dir, distance, BlockLayer.value))
+                {
+                    //Calculate force
+                    Vector3 force = dir * (explosionForce / 10) / distance;
+                    //Apply explosion force
+                    if(force != Vector3.zero)
+                        Hits[i].attachedRigidbody.AddForce(force, ForceMode.Force);
+                    //Shake camera
+                    if (Hits[i].GetComponent<Collider>().CompareTag("Player"))
+                        cam.DoShake(shakeDuration, shakeStrength);
+                }
+            }
+            if (Hits[i].GetComponent<Collider>() != null)
+            {
+                //Calculate damage to deal
+                var damageable = Hits[i].GetComponentInParent<IDamageable>();
+                float distance = Vector3.Distance(transform.position, Hits[i].transform.position);
+                float damageToDeal = Mathf.Lerp(MaxDmg, MinDmg, distance / radius);
+                Vector3 dir = Vector3.zero;
+                if (damageable != null)
+                {
+                    //deal damage
+                    ps.damageValue += damageToDeal;
+                    damageable.TakeDamage(damageToDeal, dir);
+                }
+            }
         }
+        DestroyEnemy();
     }
 
     public void TakeDamage(float damage, Vector3 hitDirection)
@@ -157,7 +194,7 @@ public class BasicEnemy : MonoBehaviour, IDamageable
         EnemyHealth -= damage;
         if (EnemyHealth <= 0)
         {
-            ToggleRagdoll(true, hitDirection);
+            ExplodeOnDeath();
         }
     }
 }

@@ -27,48 +27,56 @@ public class GunInfoBullets : MonoBehaviour
     {
         GameObject weapon = invSys.CurrentEquippedItem;
 
-        // Only update if weapon changed
-        if (weapon != lastWeapon && item.itemType == InventorySystem.ItemType.Gun)
+        if(weapon != null && item != null)
         {
-            lastWeapon = weapon;
-            ammoIcon.SetActive(true);
-            gunScript = null;
-            ammoField = null;
-            reserveField = null;
-
-            if (weapon != null)
+            // Only update if weapon changed
+            if (weapon != lastWeapon && item.itemType == InventorySystem.ItemType.Gun)
             {
-                // Find the first custom script with currentAmmo and reserveAmmo
-                foreach (var script in weapon.GetComponents<MonoBehaviour>())
+                lastWeapon = weapon;
+                ammoIcon.SetActive(true);
+                gunScript = null;
+                ammoField = null;
+                reserveField = null;
+
+                if (weapon != null)
                 {
-                    var type = script.GetType();
-
-                    var ca = type.GetField("currentAmmo");
-                    var ra = type.GetField("reserveAmmo");
-
-                    if (ca != null && ra != null)
+                    // Find the first custom script with currentAmmo and reserveAmmo
+                    foreach (var script in weapon.GetComponents<MonoBehaviour>())
                     {
-                        gunScript = script;
-                        ammoField = ca;
-                        reserveField = ra;
-                        break;
+                        var type = script.GetType();
+
+                        var ca = type.GetField("currentAmmo");
+                        var ra = type.GetField("reserveAmmo");
+
+                        if (ca != null && ra != null)
+                        {
+                            gunScript = script;
+                            ammoField = ca;
+                            reserveField = ra;
+                            break;
+                        }
                     }
                 }
             }
-        }
-        else
-        {
-            ammoIcon.SetActive(false);
-        }
+            else
+            {
+                ammoIcon.SetActive(false);
+                gameObject.GetComponent<TextMeshProUGUI>().text = null;
+            }
 
-        // Sync ammo values if we found a gun script
-        if (gunScript != null)
-        {
-            // Read values from weapon script
-            currentAmmo = (int)ammoField.GetValue(gunScript);
-            reserveAmmo = (int)reserveField.GetValue(gunScript);
+            // Sync ammo values if we found a gun script
+            if (gunScript != null)
+            {
+                // Read values from weapon script
+                currentAmmo = (int)ammoField.GetValue(gunScript);
+                reserveAmmo = (int)reserveField.GetValue(gunScript);
 
-            gameObject.GetComponent<TextMeshProUGUI>().text = currentAmmo + " / " + reserveAmmo;
+                gameObject.GetComponent<TextMeshProUGUI>().text = currentAmmo + " / " + reserveAmmo;
+            }
+            else
+            {
+                gameObject.GetComponent<TextMeshProUGUI>().text = null;
+            }
         }
     }
 }

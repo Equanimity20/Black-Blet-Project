@@ -10,6 +10,8 @@ public class WallRunningAdvanced : MonoBehaviour
     public float wallRunForce;
     public float wallJumpUpForce;
     public float wallJumpSideForce;
+    [Range(0f, 1f)] public float velocityPreservation = 0.5f;
+    private float entrySpeedCap;
 
     [Header("Input")]
     public KeyCode jumpKey = KeyCode.Space;
@@ -42,13 +44,14 @@ public class WallRunningAdvanced : MonoBehaviour
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
-        pm = GetComponent<PlayerMovementAdvanced>();
+        pm = GetComponent<PlayerMovementAdvanced>(); 
     }
 
     private void Update()
     {
         CheckForWall();
         StateMachine();
+
     }
 
     private void FixedUpdate()
@@ -70,21 +73,16 @@ public class WallRunningAdvanced : MonoBehaviour
 
     private void StateMachine()
     {
-        // Getting Inputs
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
 
-        // State 1 - Wallrunning
         if((wallLeft || wallRight) && verticalInput > 0 && AboveGround() && !exitingWall)
         {
             if (!pm.wallrunning)
                 StartWallRun();
 
-            // wall jump
             if (Input.GetKeyDown(jumpKey)) WallJump();
         }
-
-        // State 2 - Exiting
         else if (exitingWall)
         {
             if (pm.wallrunning)
@@ -96,8 +94,6 @@ public class WallRunningAdvanced : MonoBehaviour
             if (exitWallTimer <= 0)
                 exitingWall = false;
         }
-
-        // State 3 - None
         else
         {
             if (pm.wallrunning)
@@ -109,9 +105,15 @@ public class WallRunningAdvanced : MonoBehaviour
     {
         pm.wallrunning = true;
 
-        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+        Vector3 wallNormal = wallRight ? rightWallhit.normal : leftWallhit.normal;
+        Vector3 wallForward = Vector3.Cross(wallNormal, transform.up);
+        if ((orientation.forward - wallForward).magnitude > (orientation.forward - -wallForward).magnitude)
+            wallForward = -wallForward;
 
-        // apply camera effects
+        float horizontalSpeed = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z).magnitude;
+        entrySpeedCap = horizontalSpeed;
+        rb.linearVelocity = wallForward * (horizontalSpeed * velocityPreservation);
+
         cam.DoFov(90f, 0.25f);
         if (wallLeft) cam.DoTilt(-15f, 0.25f);
         if (wallRight) cam.DoTilt(15f, 0.25f);
@@ -128,14 +130,18 @@ public class WallRunningAdvanced : MonoBehaviour
         if ((orientation.forward - wallForward).magnitude > (orientation.forward - -wallForward).magnitude)
             wallForward = -wallForward;
 
-        // forward force
         rb.AddForce(wallForward * wallRunForce, ForceMode.Force);
 
-        // push to wall force
+        Vector3 flatVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+        if (flatVel.magnitude > entrySpeedCap)
+        {
+            Vector3 limited = flatVel.normalized * entrySpeedCap;
+            rb.linearVelocity = new Vector3(limited.x, rb.linearVelocity.y, limited.z);
+        }
+
         if (!(wallLeft && horizontalInput > 0) && !(wallRight && horizontalInput < 0))
             rb.AddForce(-wallNormal * 100, ForceMode.Force);
 
-        // weaken gravity
         if (useGravity)
             rb.AddForce(transform.up * gravityCounterForce, ForceMode.Force);
     }
@@ -144,32 +150,25 @@ public class WallRunningAdvanced : MonoBehaviour
     {
         pm.wallrunning = false;
 
-        // reset camera effects
         cam.DoFov(80f, 0.25f);
         cam.DoTilt(0f, 0.25f);
     }
 
     private void WallJump()
     {
-        // Enter exiting wall state
         exitingWall = true;
         exitWallTimer = exitWallTime;
 
-        // Stop all movement *immediately*
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
 
-        // Disable current wall forces temporarily
         rb.useGravity = true;
 
         Vector3 wallNormal = wallRight ? rightWallhit.normal : leftWallhit.normal;
 
-        // Build jump direction: upward and away from wall (slightly more horizontal)
         Vector3 jumpDirection = (transform.up + wallNormal * 1.2f).normalized;
 
-        // Apply force with precise magnitude
         float totalForce = Mathf.Sqrt(wallJumpUpForce * wallJumpUpForce + wallJumpSideForce * wallJumpSideForce);
         rb.AddForce(jumpDirection * totalForce, ForceMode.Impulse);
     }
-
 }

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
+using Unity.VisualScripting;
 
 public class PlayerCam : MonoBehaviour
 {
@@ -62,5 +63,33 @@ public class PlayerCam : MonoBehaviour
     public void StopBobbing()
     {
         gameObject.transform.localPosition = new Vector3(0, originalYPos, 0);
+    }
+
+    public void DoShake(float duration, float strength)
+    {
+        StartCoroutine(Shake(duration, strength));
+    }
+    public IEnumerator Shake(float duration, float strength)
+    {
+        Transform target = this.transform;
+        float elapsed = 0f;
+        float strengthVelocity = 0f; // move outside the loop so SmoothDamp can work correctly
+        Vector3 originalTransform = target.transform.localPosition;
+
+        while (elapsed < duration)
+        {
+            float x = Random.Range(-1f, 1f);
+            float y = Random.Range(-1f, 1f);
+            float z = Random.Range(-1f, 1f);
+
+            strength = Mathf.SmoothDamp(strength, 0f, ref strengthVelocity, 1.5f);
+
+            target.transform.localPosition = originalTransform + new Vector3(x, y, z) * strength;
+
+            elapsed += Time.deltaTime;
+
+            yield return null;
+        }
+        target.transform.localPosition = originalTransform;
     }
 }

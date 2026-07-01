@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 using UnityEngine;
 
 public class Dashing : MonoBehaviour
@@ -84,8 +85,7 @@ public class Dashing : MonoBehaviour
         Vector3 dashDirection = inputDirection.normalized;
         Vector3 forceToApply = dashDirection * dashForce;
         
-        // Air dash: use AddForce
-        rb.AddForce(forceToApply, ForceMode.VelocityChange);
+        rb.AddForce(forceToApply, ForceMode.Impulse);
 
         Invoke(nameof(ResetDash), dashDuration);
     }
@@ -119,11 +119,9 @@ public class Dashing : MonoBehaviour
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
 
-        // Get forward and right vectors
         Vector3 camForward = playerCam.forward;
         Vector3 camRight = playerCam.right;
 
-        // Zero out vertical tilt only if player is NOT pressing vertical input
         if (vertical == 0)
             camForward.y = 0f;
 
@@ -131,15 +129,12 @@ public class Dashing : MonoBehaviour
         camRight.y = 0f;
         camRight.Normalize();
 
-        // Combine input
         Vector3 direction = (camForward * vertical + camRight * horizontal);
 
-        // Allow vertical dashing if player is looking strongly up or down
         if (vertical != 0)
         {
             float verticalLookDot = Vector3.Dot(playerCam.forward.normalized, Vector3.up);
             
-            // Only allow strong vertical dashes if camera is tilted up/down enough
             if (Mathf.Abs(verticalLookDot) > 0.75f)
             {
                 direction = playerCam.forward * vertical + playerCam.right * horizontal;
