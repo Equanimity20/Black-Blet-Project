@@ -2,14 +2,14 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    public int MaxFrameRate;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public int MaxFrameRate = 144;
+
+    void Awake()
     {
+        QualitySettings.vSyncCount = 0; // Must be 0 or targetFrameRate is ignored
         Application.targetFrameRate = MaxFrameRate;
     }
 
-    // Update is called once per frame
     void Update()
     {
         

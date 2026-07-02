@@ -10,6 +10,7 @@ public class PlayerStats : MonoBehaviour
     [Header("Health")]
     public float maxHealth = 100f;
     public float currentHealth;
+    private float lastHealth = -1f; // Track changes — only update UI when health changes
 
     [Header("Damage Value")]
     public float damageValue;
@@ -24,20 +25,25 @@ public class PlayerStats : MonoBehaviour
 
     [Header("Damage Tilt")]
     float tiltAmount;
-    // Start is called before the first frame update
+
     void Start()
     {
         currentHealth = maxHealth;
         pm.enabled = true;
+        UpdateHealthText();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        speed = Vector3.Distance(transform.position, lastPosition) / Time.deltaTime; 
+        speed = Vector3.Distance(transform.position, lastPosition) / Time.deltaTime;
         lastPosition = transform.position;
 
-        healthText.text = currentHealth.ToString(); ;
+        // Only rebuild the string and set text when health actually changes
+        if (currentHealth != lastHealth)
+        {
+            UpdateHealthText();
+            lastHealth = currentHealth;
+        }
 
         if (damageValue > 0)
         {
@@ -45,28 +51,24 @@ public class PlayerStats : MonoBehaviour
             damageValue = 0;
         }
 
-        if (currentHealth == 0)
+        if (currentHealth == 0 && !Dead)
         {
             Dead = true;
             pm.enabled = false;
         }
     }
 
+    private void UpdateHealthText()
+    {
+        healthText.text = Mathf.CeilToInt(currentHealth).ToString();
+    }
+
     public void TakeDamage(float damageAmount)
     {
         currentHealth -= damageAmount;
-        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth); // Prevent health going below 0 or above max
+        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
 
-        float randomNumber = Random.Range(0, 1f);
-        
-        if (randomNumber < 0.5f)
-        {
-            tiltAmount = 5f;
-        }
-        else
-        {
-            tiltAmount = -5f;
-        }
+        tiltAmount = Random.Range(0, 1f) < 0.5f ? 5f : -5f;
 
         StartCoroutine(DamageTilt());
     }

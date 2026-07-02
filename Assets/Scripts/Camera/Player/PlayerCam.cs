@@ -19,6 +19,7 @@ public class PlayerCam : MonoBehaviour
     public float bobHeight;
 
     private float originalYPos;
+    private Camera cam; // Cached — was calling GetComponent every DoFov call
 
     private void Start()
     {
@@ -26,11 +27,11 @@ public class PlayerCam : MonoBehaviour
         Cursor.visible = false;
 
         originalYPos = camHolder.localPosition.y;
+        cam = GetComponent<Camera>();
     }
 
     private void Update()
     {
-        // get mouse input
         float mouseX = Input.GetAxisRaw("Mouse X") * Time.deltaTime * sensX;
         float mouseY = Input.GetAxisRaw("Mouse Y") * Time.deltaTime * sensY;
 
@@ -39,14 +40,13 @@ public class PlayerCam : MonoBehaviour
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
 
-        // rotate cam and orientation
         camHolder.rotation = Quaternion.Euler(xRotation, yRotation, 0);
         orientation.rotation = Quaternion.Euler(0, yRotation, 0);
     }
 
     public void DoFov(float endValue, float duration)
     {
-        GetComponent<Camera>().DOFieldOfView(endValue, duration);
+        cam.DOFieldOfView(endValue, duration);
     }
 
     public void DoTilt(float zTilt, float duration)
@@ -56,7 +56,6 @@ public class PlayerCam : MonoBehaviour
 
     public void DoBobbing(float bobFrequency, float bobHeight)
     {
-        Mathf.Sin(bobFrequency * Time.time);
         gameObject.transform.localPosition = new Vector3(0, Mathf.Sin(bobFrequency * Time.time) * bobHeight, 0);
     }
 
@@ -69,12 +68,13 @@ public class PlayerCam : MonoBehaviour
     {
         StartCoroutine(Shake(duration, strength));
     }
+
     public IEnumerator Shake(float duration, float strength)
     {
         Transform target = this.transform;
         float elapsed = 0f;
-        float strengthVelocity = 0f; // move outside the loop so SmoothDamp can work correctly
-        Vector3 originalTransform = target.transform.localPosition;
+        float strengthVelocity = 0f;
+        Vector3 originalTransform = target.localPosition;
 
         while (elapsed < duration)
         {
@@ -83,13 +83,12 @@ public class PlayerCam : MonoBehaviour
             float z = Random.Range(-1f, 1f);
 
             strength = Mathf.SmoothDamp(strength, 0f, ref strengthVelocity, 1.5f);
-
-            target.transform.localPosition = originalTransform + new Vector3(x, y, z) * strength;
+            target.localPosition = originalTransform + new Vector3(x, y, z) * strength;
 
             elapsed += Time.deltaTime;
-
             yield return null;
         }
-        target.transform.localPosition = originalTransform;
+
+        target.localPosition = originalTransform;
     }
 }

@@ -6,36 +6,38 @@ public class SpeedlinesActivation : MonoBehaviour
     public PlayerStats ps;
     public ParticleSystem speedlines;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    private bool speedlinesPlaying = false; // Track state — only call Play/Stop on transitions
+
     void Start()
     {
         speedlines.Stop();
+        speedlinesPlaying = false;
     }
 
-    // Update is called once per frame
     void Update()
     {
+        bool shouldPlay = ShouldSpeedlinesPlay();
 
-        if (Input.GetKeyDown(KeyCode.E))
+        if (shouldPlay && !speedlinesPlaying)
         {
             speedlines.Play();
+            speedlinesPlaying = true;
         }
-        
-        if (pm.state != PlayerMovementAdvanced.MovementState.air && pm.state != PlayerMovementAdvanced.MovementState.walking)
-        {
-            if (pm.state == PlayerMovementAdvanced.MovementState.sprinting ||
-            pm.state == PlayerMovementAdvanced.MovementState.wallrunning ||
-            pm.state == PlayerMovementAdvanced.MovementState.dashing ||
-            pm.state == PlayerMovementAdvanced.MovementState.sliding &&
-            ps.speed >= 10f)
-            {
-                speedlines.Play();
-            }
-        }
-
-        if (ps.speed < 10f)
+        else if (!shouldPlay && speedlinesPlaying)
         {
             speedlines.Stop();
+            speedlinesPlaying = false;
         }
+    }
+
+    private bool ShouldSpeedlinesPlay()
+    {
+        if (ps.speed < 10f)
+            return false;
+
+        return pm.state == PlayerMovementAdvanced.MovementState.sprinting ||
+               pm.state == PlayerMovementAdvanced.MovementState.wallrunning ||
+               pm.state == PlayerMovementAdvanced.MovementState.dashing ||
+               pm.state == PlayerMovementAdvanced.MovementState.sliding;
     }
 }

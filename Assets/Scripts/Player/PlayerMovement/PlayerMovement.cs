@@ -17,7 +17,6 @@ public class PlayerMovementAdvanced : MonoBehaviour
     public float maxYSpeed;
 
     public float groundDrag;
-    private Vector3 lastPosition;
 
     [Header("Jumping")]
     public float jumpForce;
@@ -31,11 +30,11 @@ public class PlayerMovementAdvanced : MonoBehaviour
     private float startYScale;
 
     [Header("Coyote Time")]
-    public float coyoteTime = 0.2f; // how lenient the jump is after falling
+    public float coyoteTime = 0.2f;
     private float coyoteTimeCounter;
 
     [Header("Jump Buffer")]
-    public float jumpBufferTime = 0.2f; // how long we remember a jump press
+    public float jumpBufferTime = 0.2f;
     private float jumpBufferCounter;
 
     [Header("Keybinds")]
@@ -52,6 +51,9 @@ public class PlayerMovementAdvanced : MonoBehaviour
     public float maxSlopeAngle;
     private RaycastHit slopeHit;
     private bool exitingSlope;
+
+    // Cached slope result - computed once per Update, reused everywhere
+    private bool cachedOnSlope;
 
     [Header("References")]
     public Transform orientation;
@@ -96,8 +98,10 @@ public class PlayerMovementAdvanced : MonoBehaviour
 
     private void Update()
     {
-
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f, whatIsGround);
+
+        // Cache OnSlope once per frame — used by SpeedControl, MovePlayer, StateHandler
+        cachedOnSlope = ComputeOnSlope();
 
         MyInput();
         StateHandler();
@@ -106,25 +110,18 @@ public class PlayerMovementAdvanced : MonoBehaviour
         if (state != MovementState.dashing && state != MovementState.wallrunning && state != MovementState.sliding)
             SpeedControl();
 
-        // handle drag
         if (state == MovementState.walking || state == MovementState.sprinting || state == MovementState.crouching)
             rb.linearDamping = groundDrag;
         else
             rb.linearDamping = 0;
 
         if (grounded)
-        {
             coyoteTimeCounter = coyoteTime;
-        }
         else
-        {
             coyoteTimeCounter -= Time.deltaTime;
-        }
 
         if (state != lastState)
-        {
             cam.DoFov(80, 0.25f);
-        }
     }
 
     private void FixedUpdate()
@@ -137,36 +134,27 @@ public class PlayerMovementAdvanced : MonoBehaviour
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
 
-        // when to jump
         if (Input.GetKeyDown(jumpKey))
-        {
             jumpBufferCounter = jumpBufferTime;
-        }
         else
-        {
             jumpBufferCounter -= Time.deltaTime;
-        }
 
         if (jumpBufferCounter > 0 && coyoteTimeCounter > 0 && readyToJump)
         {
             readyToJump = false;
             Jump();
             Invoke(nameof(ResetJump), jumpCooldown);
-            jumpBufferCounter = 0f; // Clear buffer after successful jump
+            jumpBufferCounter = 0f;
         }
 
-        // start crouch
         if (Input.GetKeyDown(crouchKey))
         {
             transform.localScale = new Vector3(transform.localScale.x, crouchYScale, transform.localScale.z);
             rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
         }
 
-        // stop crouch
         if (Input.GetKeyUp(crouchKey))
-        {
             transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
-        }
     }
 
     private float desiredMoveSpeed;
@@ -176,106 +164,72 @@ public class PlayerMovementAdvanced : MonoBehaviour
 
     private void StateHandler()
     {
-        //Mode - Dashing
         if (dashing)
         {
             state = MovementState.dashing;
             desiredMoveSpeed = dashSpeed;
             speedChangeFactor = dashSpeedChangeFactor;
         }
-        //Mode - Climbing
         else if (climbing)
         {
             state = MovementState.climbing;
             desiredMoveSpeed = climbSpeed;
         }
-        //Mode - Wallrunning
         else if (wallrunning)
         {
             state = MovementState.wallrunning;
             desiredMoveSpeed = wallrunSpeed;
         }
-        // Mode - Sliding
+
         if (sliding)
         {
             state = MovementState.sliding;
-
-            if (OnSlope() && rb.linearVelocity.y < 0.1f)
-                desiredMoveSpeed = slideSpeed;
-
-            else
-                desiredMoveSpeed = sprintSpeed;
+            desiredMoveSpeed = (cachedOnSlope && rb.linearVelocity.y < 0.1f) ? slideSpeed : sprintSpeed;
         }
-
-        // Mode - Crouching
         else if (Input.GetKey(crouchKey))
         {
             state = MovementState.crouching;
             cam.DoFov(75f, 0.25f);
             desiredMoveSpeed = crouchSpeed;
         }
-
-        // Mode - Sprinting
         else if (grounded && Input.GetKey(sprintKey))
         {
             state = MovementState.sprinting;
             cam.DoFov(85f, 0.25f);
             desiredMoveSpeed = sprintSpeed;
         }
-
-        // Mode - Walking
         else if (grounded && (horizontalInput != 0 || verticalInput != 0))
         {
             state = MovementState.walking;
             desiredMoveSpeed = walkSpeed;
         }
-        
-        // Mode - Idle
         else if (grounded && horizontalInput == 0 && verticalInput == 0)
         {
             state = MovementState.idle;
             desiredMoveSpeed = 0;
         }
-
-        // Mode - Air
         else
         {
             state = MovementState.air;
-
-            if (desiredMoveSpeed < sprintSpeed)
-            {
-                desiredMoveSpeed = walkSpeed;
-            }
-            else
-            {
-                desiredMoveSpeed = sprintSpeed;
-            }
+            desiredMoveSpeed = (desiredMoveSpeed < sprintSpeed) ? walkSpeed : sprintSpeed;
         }
 
         bool desiredMoveSpeedHasChanged = desiredMoveSpeed != lastDesiredMoveSpeed;
         if (lastState == MovementState.dashing)
-        {
             keepMomentum = true;
-        }
 
         if (desiredMoveSpeedHasChanged)
         {
+            StopAllCoroutines();
             if (keepMomentum)
-            {
-                StopAllCoroutines();
                 StartCoroutine(SmoothlyLerpMoveSpeed());
-            }
             else
-            {
-                StopAllCoroutines();
                 moveSpeed = desiredMoveSpeed;
-            }
         }
 
         lastDesiredMoveSpeed = desiredMoveSpeed;
         lastState = state;
 
-        // check if desiredMoveSpeed has changed drastically
         if (Mathf.Abs(desiredMoveSpeed - lastDesiredMoveSpeed) > 4f && moveSpeed != 0)
         {
             StopAllCoroutines();
@@ -295,7 +249,6 @@ public class PlayerMovementAdvanced : MonoBehaviour
         float time = 0;
         float difference = Mathf.Abs(desiredMoveSpeed - moveSpeed);
         float startValue = moveSpeed;
-
         float boostFactor = speedChangeFactor;
 
         while (time < difference)
@@ -317,7 +270,8 @@ public class PlayerMovementAdvanced : MonoBehaviour
 
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
-        if (OnSlope() && !exitingSlope)
+        // Use cached slope result — no extra raycast here
+        if (cachedOnSlope && !exitingSlope)
         {
             rb.AddForce(GetSlopeMoveDirection(moveDirection) * moveSpeed * 20f, ForceMode.Force);
 
@@ -328,17 +282,18 @@ public class PlayerMovementAdvanced : MonoBehaviour
         {
             rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
         }
-        else if (!grounded)
+        else
         {
             rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
         }
 
-        rb.useGravity = !OnSlope();
+        rb.useGravity = !cachedOnSlope;
     }
 
     private void SpeedControl()
     {
-        if (OnSlope() && !exitingSlope)
+        // Use cached slope result — no extra raycast here
+        if (cachedOnSlope && !exitingSlope)
         {
             if (rb.linearVelocity.magnitude > moveSpeed)
                 rb.linearVelocity = rb.linearVelocity.normalized * moveSpeed;
@@ -346,7 +301,6 @@ public class PlayerMovementAdvanced : MonoBehaviour
         else
         {
             Vector3 flatVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
-
             if (flatVel.magnitude > moveSpeed)
             {
                 Vector3 limitedVel = flatVel.normalized * moveSpeed;
@@ -355,17 +309,12 @@ public class PlayerMovementAdvanced : MonoBehaviour
         }
 
         if (maxYSpeed != 0 && rb.linearVelocity.y > maxYSpeed)
-        {
             rb.linearVelocity = new Vector3(rb.linearVelocity.x, maxYSpeed, rb.linearVelocity.z);
-        }
     }
 
     private void Jump()
     {
         exitingSlope = true;
-
-        //rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
-
         rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
     }
 
@@ -375,15 +324,21 @@ public class PlayerMovementAdvanced : MonoBehaviour
         exitingSlope = false;
     }
 
-    public bool OnSlope()
+    // Renamed to ComputeOnSlope — only called once per frame from Update
+    private bool ComputeOnSlope()
     {
         if (Physics.Raycast(transform.position, Vector3.down, out slopeHit, playerHeight * 0.5f + 0.3f))
         {
             float angle = Vector3.Angle(Vector3.up, slopeHit.normal);
             return angle < maxSlopeAngle && angle != 0;
         }
-
         return false;
+    }
+
+    // Public accessor uses the cached value — no extra raycast
+    public bool OnSlope()
+    {
+        return cachedOnSlope;
     }
 
     public Vector3 GetSlopeMoveDirection(Vector3 direction)
